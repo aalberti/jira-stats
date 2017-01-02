@@ -1,0 +1,20 @@
+group 'com.primasol.aa'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'groovy'
+apply plugin: 'java'
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://maven.atlassian.com/content/repositories/atlassian-public/"
+    }
+}
+
+dependencies {
+    compile 'org.codehaus.groovy:groovy-all:2.3.11'
+    compile group: 'com.atlassian.jira', name: 'jira-rest-java-client-core', version: '4.0.0'
+    compile "com.atlassian.fugue:fugue:2.2.1"
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+    testCompile group: 'org.assertj', name: 'assertj-core', version: '3.6.1'
+}
