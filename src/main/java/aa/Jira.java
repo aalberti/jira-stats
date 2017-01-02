@@ -20,8 +20,8 @@ import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.sun.jersey.core.util.Base64;
-import static aa.PrimaIssueBuilder.issue;
-import static aa.PrimaIssueTransitionBuilder.transition;
+import static aa.PrimaIssue.Builder.issue;
+import static aa.PrimaIssueTransition.Builder.transition;
 import static java.util.stream.Collectors.toList;
 
 public class Jira {
@@ -61,7 +61,10 @@ public class Jira {
 		List<PrimaIssueTransition> transitions = stream(jiraIssue.getChangelog())
 			.flatMap(Jira::toTransitions)
 			.collect(toList());
-		return issue().withKey(jiraIssue.getKey()).withTransitions(transitions).build();
+		return issue()
+			.withKey(jiraIssue.getKey())
+			.withTransitions(transitions)
+			.build();
 	}
 
 	private static Stream<PrimaIssueTransition> toTransitions(ChangelogGroup changelogGroup) {
@@ -72,8 +75,11 @@ public class Jira {
 	}
 
 	private static PrimaIssueTransition toTransition(ChangelogItem i, ChangelogGroup changelogGroup) {
-		return transition().withDate(changelogGroup.getCreated()).withField(i.getField()).withTarget(i.getToString())
-			.createPrimaIssueTransition();
+		return transition()
+			.withDate(changelogGroup.getCreated())
+			.withField(i.getField())
+			.withTarget(i.getToString())
+			.build();
 	}
 
 	private static <T> Stream<T> stream(Iterable<T> ts) {
