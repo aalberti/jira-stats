@@ -21,6 +21,7 @@ import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.sun.jersey.core.util.Base64;
 import static aa.PrimaIssueBuilder.issue;
+import static aa.PrimaIssueTransitionBuilder.transition;
 import static java.util.stream.Collectors.toList;
 
 public class Jira {
@@ -71,7 +72,8 @@ public class Jira {
 	}
 
 	private static PrimaIssueTransition toTransition(ChangelogItem i, ChangelogGroup changelogGroup) {
-		return new PrimaIssueTransition(changelogGroup.getCreated(), i.getField(), i.getToString());
+		return transition().withDate(changelogGroup.getCreated()).withField(i.getField()).withTarget(i.getToString())
+			.createPrimaIssueTransition();
 	}
 
 	private static <T> Stream<T> stream(Iterable<T> ts) {

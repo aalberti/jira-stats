@@ -7,7 +7,7 @@ public class PrimaIssueTransition {
 	private String field;
 	private String to;
 
-	public PrimaIssueTransition(DateTime date, String field, String to) {
+	PrimaIssueTransition(DateTime date, String field, String to) {
 		this.date = date;
 		this.field = field;
 		this.to = to;
