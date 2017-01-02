@@ -22,7 +22,7 @@ public class PrimaIssue {
 		return transitions.stream()
 			.filter(t -> "status".equals(t.getField()))
 			.filter(t -> status.equals(t.getTo()))
-			.sorted(comparing(PrimaIssueTransition::getDate))
+			.sorted(comparing(PrimaIssueTransition::getDate).reversed())
 			.findFirst();
 	}
 

@@ -1,6 +1,5 @@
 package aa;
 
-import org.assertj.core.api.Condition;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,11 +20,9 @@ public class JiraTest {
 
 	@Test
 	public void get_last_closure_date() throws Exception {
-		PrimaIssue issue = Jira.get("PRIN-3046");
+		//PPC-11 was closed twice
+		PrimaIssue issue = Jira.get("PPC-11");
 		assertThat(issue.getLastTransitionToStatus("Closed"))
-			.hasValueSatisfying(new Condition<>(
-				t -> "2016-12-28T12:07:37.000+01:00".equals(t.getDate().toString()),
-				"closed when closed"
-			));
+			.hasValueSatisfying(t -> assertThat(t.getDate().toString()).isEqualTo("2016-12-29T11:33:40.000+01:00"));
 	}
 }
