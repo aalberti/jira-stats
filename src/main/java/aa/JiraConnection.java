@@ -10,8 +10,6 @@ import java.util.Base64;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Stream;
 
 import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
@@ -19,7 +17,7 @@ import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.atlassian.util.concurrent.Promise;
-import static aa.IssueMapper.stream;
+import io.reactivex.Observable;
 import static java.util.Arrays.asList;
 
 public class JiraConnection implements Closeable {
@@ -71,15 +69,20 @@ public class JiraConnection implements Closeable {
 		jiraRestClient.close();
 	}
 
-	public Promise<Stream<Issue>> getIssues() {
-		return jiraRestClient.getSearchClient().searchJql("project = prin", 300, 0, FIELDS)
-			.map(res -> stream(res.getIssues()).map(i -> {
+	public Observable<Issue> getIssues() {
+		return Observable.create(subscriber -> {
+			SearchResult searchResult = jiraRestClient.getSearchClient().searchJql("project = prin", 20, 0, FIELDS).get();
+			for (com.atlassian.jira.rest.client.api.domain.Issue jiraIssue : searchResult.getIssues()) {
 				try {
-					return getIssue(i.getKey()).get();
+					Issue issue = getIssue(jiraIssue.getKey()).get();
+					subscriber.onNext(issue);
 				}
 				catch (Exception e) {
+					subscriber.onError(e);
 					throw new RuntimeException(e);
 				}
-			}));
+			}
+			subscriber.onComplete();
+		});
 	}
 }

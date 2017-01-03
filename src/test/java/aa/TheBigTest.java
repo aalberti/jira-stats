@@ -10,7 +10,12 @@ public class TheBigTest {
 		JiraConnection jiraConnection = new JiraConnection();
 		jiraConnection.open();
 		try (JiraConnection ignored = jiraConnection) {
-			assertThat(jiraConnection.getIssues().get()).size().isGreaterThan(5000);
+			assertThat(
+				jiraConnection.getIssues().test()
+					.await()
+					.assertComplete()
+					.valueCount())
+				.isGreaterThan(50000);
 		}
 	}
 }
