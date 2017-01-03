@@ -11,11 +11,11 @@ public class TheBigTest {
 		jiraConnection.open();
 		try (JiraConnection ignored = jiraConnection) {
 			assertThat(
-				jiraConnection.getIssues().test()
+				jiraConnection.fetchIssues().test()
 					.await()
 					.assertComplete()
-					.valueCount())
-				.isGreaterThan(50000);
+					.valueCount()
+			).isGreaterThan(50000);
 		}
 	}
 }

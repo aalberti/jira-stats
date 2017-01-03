@@ -13,7 +13,7 @@ public class JiraStatistics {
 		JiraConnection jiraConnection = new JiraConnection();
 		jiraConnection.open();
 		try (JiraConnection ignored = jiraConnection) {
-			return jiraConnection.getIssue(issueKey).get();
+			return jiraConnection.fetchIssue(issueKey).get();
 		}
 	}
 }

@@ -6,10 +6,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Stream;
 
 import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
@@ -58,7 +61,7 @@ public class JiraConnection implements Closeable {
 		}
 	}
 
-	public Promise<Issue> getIssue(String issueKey) {
+	public Promise<Issue> fetchIssue(String issueKey) {
 		return jiraRestClient.getIssueClient()
 			.getIssue(issueKey, EnumSet.of(IssueRestClient.Expandos.CHANGELOG))
 			.map(mapper::toIssue);
@@ -69,20 +72,35 @@ public class JiraConnection implements Closeable {
 		jiraRestClient.close();
 	}
 
-	public Observable<Issue> getIssues() {
+	public Observable<Issue> fetchIssues() {
 		return Observable.create(subscriber -> {
-			SearchResult searchResult = jiraRestClient.getSearchClient().searchJql("project = prin", 20, 0, FIELDS).get();
-			for (com.atlassian.jira.rest.client.api.domain.Issue jiraIssue : searchResult.getIssues()) {
-				try {
-					Issue issue = getIssue(jiraIssue.getKey()).get();
-					subscriber.onNext(issue);
-				}
-				catch (Exception e) {
-					subscriber.onError(e);
-					throw new RuntimeException(e);
-				}
+			int start = 0;
+			int offset = 20;
+			do {
+				if (subscriber.isDisposed())
+					break;
+				Promise<SearchResult> searchResultPromise = jiraRestClient.getSearchClient().searchJql("project = prin", offset, start, FIELDS);
+				searchResultPromise.fail(subscriber::onError);
+				SearchResult searchResult = searchResultPromise.get();
+				parallelStream(searchResult.getIssues()).forEach(jiraIssue -> {
+					try {
+						Issue issue = fetchIssue(jiraIssue.getKey()).get();
+						subscriber.onNext(issue);
+					}
+					catch (Exception e) {
+						subscriber.onError(new RuntimeException("Can't retrieve issue " + jiraIssue.getKey(), e));
+					}
+				});
+				start += offset;
 			}
+			while (start < 100);
 			subscriber.onComplete();
 		});
+	}
+
+	private <T> Stream<T> parallelStream(Iterable<T> iterable) {
+		List<T> list = new ArrayList<>();
+		iterable.forEach(list::add);
+		return list.stream().parallel();
 	}
 }
