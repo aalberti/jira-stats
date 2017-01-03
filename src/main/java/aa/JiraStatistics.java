@@ -16,14 +16,14 @@ import static aa.Issue.Builder.issue;
 import static aa.Transition.Builder.transition;
 import static java.util.stream.Collectors.toList;
 
-public class Jira {
+public class JiraStatistics {
 	public static void main(String[] args) throws URISyntaxException, ExecutionException, InterruptedException, IOException {
 		JiraConnection jiraConnection = new JiraConnection();
 		jiraConnection.open();
 		try (JiraConnection ignored = jiraConnection) {
 			jiraConnection.getIssue("PRIN-3047")
 				.done(i -> System.out.println(i.getKey() + ": " + i.getSummary()))
-				.map(Jira::toIssue)
+				.map(JiraStatistics::toIssue)
 				.get();
 		}
 	}
@@ -34,14 +34,14 @@ public class Jira {
 		try (JiraConnection ignored = jiraConnection) {
 			return jiraConnection.getIssue(issueKey)
 				.done(i -> System.out.println(i.getKey() + ": " + i.getSummary()))
-				.map(Jira::toIssue)
+				.map(JiraStatistics::toIssue)
 				.get();
 		}
 	}
 
 	private static Issue toIssue(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
 		List<Transition> history = stream(jiraIssue.getChangelog())
-			.flatMap(Jira::toHistory)
+			.flatMap(JiraStatistics::toHistory)
 			.collect(toList());
 		return issue()
 			.withKey(jiraIssue.getKey())
