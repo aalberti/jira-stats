@@ -19,7 +19,7 @@ public class JiraTest {
 	}
 
 	@Test
-	public void lastClosurDate() throws Exception {
+	public void lastClosureDate() throws Exception {
 		PrimaIssue issueClosedTwice = Jira.get("PPC-11");
 		assertThat(issueClosedTwice.getLastTransitionToStatus("Closed"))
 			.hasValueSatisfying(t -> assertThat(t.getAt().toString()).isEqualTo("2016-12-29T10:33:40Z"));
@@ -37,5 +37,12 @@ public class JiraTest {
 		PrimaIssue issueClosedTwice = Jira.get("PPC-11");
 		assertThat(issueClosedTwice.getLeadTime())
 			.hasValueSatisfying(t -> assertThat(t.toString()).isEqualTo("PT3051H22M35S"));
+	}
+
+	@Test
+	public void leadTime_isEmpty_when_openIssue() throws Exception {
+		PrimaIssue openIssue = Jira.get("PMT-4");
+		assertThat(openIssue.getLeadTime())
+			.isEmpty();
 	}
 }
