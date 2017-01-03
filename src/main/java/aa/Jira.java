@@ -61,17 +61,17 @@ public class Jira {
 	}
 
 	private static PrimaIssue toIssue(Issue jiraIssue) {
-		List<PrimaIssueTransition> transitions = stream(jiraIssue.getChangelog())
-			.flatMap(Jira::toTransitions)
+		List<PrimaIssueTransition> history = stream(jiraIssue.getChangelog())
+			.flatMap(Jira::toHistory)
 			.collect(toList());
 		return issue()
 			.withKey(jiraIssue.getKey())
 			.withCreationDate(toInstant(jiraIssue.getCreationDate()))
-			.withTransitions(transitions)
+			.withHistory(history)
 			.build();
 	}
 
-	private static Stream<PrimaIssueTransition> toTransitions(ChangelogGroup changelogGroup) {
+	private static Stream<PrimaIssueTransition> toHistory(ChangelogGroup changelogGroup) {
 		System.out.println(changelogGroup.getCreated() + " by " + changelogGroup.getAuthor().getDisplayName());
 		return stream(changelogGroup.getItems())
 			.peek(i -> System.out.println("\t" + i.getField() + "(" + i.getFieldType() + ") from " + i.getFromString() + " to " + i.getToString() + " [a.k.a " + i.toString() + "]"))

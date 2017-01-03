@@ -13,8 +13,8 @@ public class JiraTest {
 	}
 
 	@Test
-	public void transitions() throws Exception {
-		assertThat(Jira.get("PRIN-3046").getTransitions())
+	public void history() throws Exception {
+		assertThat(Jira.get("PRIN-3046").getHistory())
 			.hasSize(24);
 	}
 
