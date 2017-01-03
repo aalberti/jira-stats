@@ -27,7 +27,7 @@ public class JiraTest {
 
 	@Test
 	public void lastClosureDate_isEmpty_when_openIssue() throws Exception {
-		Issue openIssue = Jira.get("PMT-4");
+		Issue openIssue = Jira.get("PRIN-2276");
 		assertThat(openIssue.getClosureDate())
 			.isEmpty();
 	}
@@ -41,7 +41,7 @@ public class JiraTest {
 
 	@Test
 	public void leadTime_isEmpty_when_openIssue() throws Exception {
-		Issue openIssue = Jira.get("PMT-4");
+		Issue openIssue = Jira.get("PRIN-2276");
 		assertThat(openIssue.getLeadTime())
 			.isEmpty();
 	}
