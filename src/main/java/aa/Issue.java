@@ -7,12 +7,12 @@ import java.util.Optional;
 
 import static java.util.Comparator.comparing;
 
-public class PrimaIssue {
+public class Issue {
 	private String key;
-	private List<PrimaIssueTransition> history;
+	private List<Transition> history;
 	private Instant creationDate;
 
-	private PrimaIssue(String key, Instant creationDate, List<PrimaIssueTransition> history) {
+	private Issue(String key, Instant creationDate, List<Transition> history) {
 		this.key = key;
 		this.creationDate = creationDate;
 		this.history = history;
@@ -20,20 +20,20 @@ public class PrimaIssue {
 
 	public String getKey() { return key; }
 
-	public List<PrimaIssueTransition> getHistory() { return history; }
-
-	public Optional<PrimaIssueTransition> getLastTransitionToStatus(String status) {
-		return history.stream()
-			.filter(t -> "status".equals(t.getField()))
-			.filter(t -> status.equals(t.getTo()))
-			.sorted(comparing(PrimaIssueTransition::getAt).reversed())
-			.findFirst();
-	}
+	public List<Transition> getHistory() { return history; }
 
 	public Optional<Duration> getLeadTime() {
-		return getLastTransitionToStatus("Closed")
-			.map(PrimaIssueTransition::getAt)
+		return getClosureDate()
 			.map(i -> Duration.between(getCreationDate(), i));
+	}
+
+	public Optional<Instant> getClosureDate() {
+		return history.stream()
+			.filter(t -> "status".equals(t.getField()))
+			.filter(t -> "Closed".equals(t.getTo()))
+			.sorted(comparing(Transition::getAt).reversed())
+			.findFirst()
+			.map(Transition::getAt);
 	}
 
 	public Instant getCreationDate() {
@@ -43,7 +43,7 @@ public class PrimaIssue {
 	public static class Builder {
 		private String key;
 		private Instant creationDate;
-		private List<PrimaIssueTransition> history;
+		private List<Transition> history;
 
 		private Builder() {}
 
@@ -54,7 +54,7 @@ public class PrimaIssue {
 			return this;
 		}
 
-		public Builder withHistory(List<PrimaIssueTransition> history) {
+		public Builder withHistory(List<Transition> history) {
 			this.history = history;
 			return this;
 		}
@@ -64,8 +64,8 @@ public class PrimaIssue {
 			return this;
 		}
 
-		public PrimaIssue build() {
-			return new PrimaIssue(key, creationDate, history);
+		public Issue build() {
+			return new Issue(key, creationDate, history);
 		}
 	}
 }

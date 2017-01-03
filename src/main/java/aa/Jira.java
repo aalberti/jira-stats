@@ -19,12 +19,11 @@ import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.domain.ChangelogGroup;
 import com.atlassian.jira.rest.client.api.domain.ChangelogItem;
-import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.sun.jersey.core.util.Base64;
-import static aa.PrimaIssue.Builder.issue;
-import static aa.PrimaIssueTransition.Builder.transition;
+import static aa.Issue.Builder.issue;
+import static aa.Transition.Builder.transition;
 import static java.util.stream.Collectors.toList;
 
 public class Jira {
@@ -32,7 +31,7 @@ public class Jira {
 		get("PRIN-3047");
 	}
 
-	public static PrimaIssue get(String issueKey) throws URISyntaxException, IOException, InterruptedException, ExecutionException {
+	public static Issue get(String issueKey) throws URISyntaxException, IOException, InterruptedException, ExecutionException {
 		URI uri = new URI("https://applications.prima-solutions.com/jira/");
 		try (JiraRestClient client = new AsynchronousJiraRestClientFactory().create(uri, authentication())) {
 			return client.getIssueClient().getIssue(issueKey, EnumSet.of(IssueRestClient.Expandos.CHANGELOG))
@@ -60,8 +59,8 @@ public class Jira {
 		}
 	}
 
-	private static PrimaIssue toIssue(Issue jiraIssue) {
-		List<PrimaIssueTransition> history = stream(jiraIssue.getChangelog())
+	private static Issue toIssue(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+		List<Transition> history = stream(jiraIssue.getChangelog())
 			.flatMap(Jira::toHistory)
 			.collect(toList());
 		return issue()
@@ -71,14 +70,14 @@ public class Jira {
 			.build();
 	}
 
-	private static Stream<PrimaIssueTransition> toHistory(ChangelogGroup changelogGroup) {
+	private static Stream<Transition> toHistory(ChangelogGroup changelogGroup) {
 		System.out.println(changelogGroup.getCreated() + " by " + changelogGroup.getAuthor().getDisplayName());
 		return stream(changelogGroup.getItems())
 			.peek(i -> System.out.println("\t" + i.getField() + "(" + i.getFieldType() + ") from " + i.getFromString() + " to " + i.getToString() + " [a.k.a " + i.toString() + "]"))
 			.map(i -> toTransition(i, changelogGroup));
 	}
 
-	private static PrimaIssueTransition toTransition(ChangelogItem i, ChangelogGroup changelogGroup) {
+	private static Transition toTransition(ChangelogItem i, ChangelogGroup changelogGroup) {
 		return transition()
 			.withAt(toInstant(changelogGroup.getCreated()))
 			.withField(i.getField())

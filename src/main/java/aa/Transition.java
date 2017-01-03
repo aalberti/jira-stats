@@ -2,12 +2,12 @@ package aa;
 
 import java.time.Instant;
 
-public class PrimaIssueTransition {
+public class Transition {
 	private Instant at;
 	private String field;
 	private String to;
 
-	PrimaIssueTransition(Instant at, String field, String to) {
+	Transition(Instant at, String field, String to) {
 		this.at = at;
 		this.field = field;
 		this.to = to;
@@ -49,8 +49,8 @@ public class PrimaIssueTransition {
 			return this;
 		}
 
-		public PrimaIssueTransition build() {
-			return new PrimaIssueTransition(at, field, to);
+		public Transition build() {
+			return new Transition(at, field, to);
 		}
 	}
 }
