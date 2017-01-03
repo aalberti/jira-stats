@@ -12,7 +12,6 @@ import java.util.Properties;
 
 import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
-import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.atlassian.util.concurrent.Promise;
@@ -20,6 +19,11 @@ import com.atlassian.util.concurrent.Promise;
 public class JiraConnection implements Closeable {
 
 	private JiraRestClient jiraRestClient;
+	private IssueMapper mapper;
+
+	public JiraConnection() {
+		this.mapper = new IssueMapper();
+	}
 
 	public void open() {
 		try {
@@ -49,12 +53,15 @@ public class JiraConnection implements Closeable {
 		}
 	}
 
+	public Promise<Issue> getIssue(String issueKey) {
+		return jiraRestClient.getIssueClient()
+			.getIssue(issueKey, EnumSet.of(IssueRestClient.Expandos.CHANGELOG))
+			.done(i -> System.out.println(i.getKey() + ": " + i.getSummary()))
+			.map(mapper::toIssue);
+	}
+
 	@Override
 	public void close() throws IOException {
 		jiraRestClient.close();
-	}
-
-	public Promise<Issue> getIssue(String issueKey) {
-		return jiraRestClient.getIssueClient().getIssue(issueKey, EnumSet.of(IssueRestClient.Expandos.CHANGELOG));
 	}
 }
