@@ -1,20 +1,20 @@
 package aa;
 
-import org.joda.time.DateTime;
+import java.time.Instant;
 
 public class PrimaIssueTransition {
-	private DateTime date;
+	private Instant at;
 	private String field;
 	private String to;
 
-	PrimaIssueTransition(DateTime date, String field, String to) {
-		this.date = date;
+	PrimaIssueTransition(Instant at, String field, String to) {
+		this.at = at;
 		this.field = field;
 		this.to = to;
 	}
 
-	public DateTime getDate() {
-		return date;
+	public Instant getAt() {
+		return at;
 	}
 
 	public String getField() {
@@ -26,7 +26,7 @@ public class PrimaIssueTransition {
 	}
 
 	public static class Builder {
-		private DateTime date;
+		private Instant at;
 		private String field;
 		private String to;
 
@@ -34,8 +34,8 @@ public class PrimaIssueTransition {
 
 		public static Builder transition() { return new Builder(); }
 
-		public Builder withDate(DateTime date) {
-			this.date = date;
+		public Builder withAt(Instant at) {
+			this.at = at;
 			return this;
 		}
 
@@ -50,7 +50,7 @@ public class PrimaIssueTransition {
 		}
 
 		public PrimaIssueTransition build() {
-			return new PrimaIssueTransition(date, field, to);
+			return new PrimaIssueTransition(at, field, to);
 		}
 	}
 }

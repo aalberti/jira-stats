@@ -5,12 +5,15 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import org.joda.time.DateTime;
 
 import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
@@ -63,6 +66,7 @@ public class Jira {
 			.collect(toList());
 		return issue()
 			.withKey(jiraIssue.getKey())
+			.withCreationDate(toInstant(jiraIssue.getCreationDate()))
 			.withTransitions(transitions)
 			.build();
 	}
@@ -76,10 +80,14 @@ public class Jira {
 
 	private static PrimaIssueTransition toTransition(ChangelogItem i, ChangelogGroup changelogGroup) {
 		return transition()
-			.withDate(changelogGroup.getCreated())
+			.withAt(toInstant(changelogGroup.getCreated()))
 			.withField(i.getField())
 			.withTarget(i.getToString())
 			.build();
+	}
+
+	private static Instant toInstant(DateTime jodaDateTime) {
+		return Instant.ofEpochMilli(jodaDateTime.getMillis());
 	}
 
 	private static <T> Stream<T> stream(Iterable<T> ts) {
