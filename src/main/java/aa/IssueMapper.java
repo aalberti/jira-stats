@@ -26,9 +26,7 @@ class IssueMapper {
 	}
 
 	private Stream<Transition> toHistory(ChangelogGroup changelogGroup) {
-		System.out.println(changelogGroup.getCreated() + " by " + changelogGroup.getAuthor().getDisplayName());
 		return stream(changelogGroup.getItems())
-			.peek(i -> System.out.println("\t" + i.getField() + "(" + i.getFieldType() + ") from " + i.getFromString() + " to " + i.getToString() + " [a.k.a " + i.toString() + "]"))
 			.map(i -> toTransition(i, changelogGroup));
 	}
 
@@ -44,7 +42,7 @@ class IssueMapper {
 		return Instant.ofEpochMilli(jodaDateTime.getMillis());
 	}
 
-	private static <T> Stream<T> stream(Iterable<T> ts) {
+	public static <T> Stream<T> stream(Iterable<T> ts) {
 		return StreamSupport.stream(ts.spliterator(), false);
 	}
 }
