@@ -27,7 +27,7 @@ public class TheBigTest {
 					.assertComplete()
 					.values())
 				.hasSize(1)
-				.allMatch(leadTime -> leadTime.toMillis() < 0);
+				.allMatch(averageLeadTime -> averageLeadTime.toDays() > 10);
 		}
 	}
 }

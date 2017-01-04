@@ -71,22 +71,20 @@ public class JiraConnection implements Closeable {
 	}
 
 	public Observable<Issue> fetchIssues() {
-		return Observable.create(subscriber -> {
+		return Observable.<com.atlassian.jira.rest.client.api.domain.Issue>create(subscriber -> {
 			if (subscriber.isDisposed())
 				return;
 			Promise<SearchResult> searchResultPromise = jiraRestClient.getSearchClient().searchJql("project = ppc", 1000, 0, FIELDS);
 			searchResultPromise.fail(subscriber::onError);
-			SearchResult searchResult = searchResultPromise.get();
-			stream(searchResult.getIssues()).forEach(jiraIssue -> {
-				try {
-					Issue issue = fetchIssue(jiraIssue.getKey()).get();
-					subscriber.onNext(issue);
-				}
-				catch (Exception e) {
-					subscriber.onError(new RuntimeException("Can't retrieve issue " + jiraIssue.getKey(), e));
-				}
-			});
+			stream(searchResultPromise.get().getIssues()).forEach(subscriber::onNext);
 			subscriber.onComplete();
+		}).map(jiraIssue -> {
+			try {
+				return fetchIssue(jiraIssue.getKey()).get();
+			}
+			catch (Exception e) {
+				throw new RuntimeException("Can't retrieve issue " + jiraIssue.getKey(), e);
+			}
 		});
 	}
 }
