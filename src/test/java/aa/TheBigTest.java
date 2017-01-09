@@ -11,6 +11,8 @@ import com.google.gson.Gson;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.UpdateOptions;
+import static com.mongodb.client.model.Filters.eq;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TheBigTest {
@@ -22,7 +24,7 @@ public class TheBigTest {
 		jiraTestCollection.find()
 			.map(d -> gson.fromJson(d.getString("json"), Issue.class))
 			.forEach((Consumer<Issue>) i -> System.out.println("Read " + i.getKey() + " lead time: " + i.getLeadTime().toString()));
-
+		System.out.println("DB contains " + jiraTestCollection.count());
 	}
 
 	@Test
@@ -37,9 +39,12 @@ public class TheBigTest {
 			jiraConnection.fetchIssues()
 				.map(i -> new SerializedIssue(i, gson.toJson(i)))
 				.doOnNext(si -> System.out.println("Serialized " + si.json))
-				.doOnNext(si -> jiraTestCollection.insertOne(
+				.doOnNext(si -> jiraTestCollection.replaceOne(
+					eq("key", si.issue.getKey()),
 					new Document("key", si.issue.getKey())
-						.append("json", si.json)))
+						.append("json", si.json),
+					new UpdateOptions().upsert(true))
+				)
 				.test().await()
 				.assertComplete();
 		}
