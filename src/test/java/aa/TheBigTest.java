@@ -2,6 +2,7 @@ package aa;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.bson.Document;
 import org.junit.Test;
@@ -13,6 +14,17 @@ import com.mongodb.client.MongoDatabase;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TheBigTest {
+	@Test
+	public void read_the_big_stuff() throws Exception {
+		Gson gson = new Gson();
+		MongoDatabase database = new MongoClient().getDatabase("local");
+		MongoCollection<Document> jiraTestCollection = database.getCollection("jiraTest");
+		jiraTestCollection.find()
+			.map(d -> gson.fromJson(d.getString("json"), Issue.class))
+			.forEach((Consumer<Issue>) i -> System.out.println("Read " + i.getKey() + " lead time: " + i.getLeadTime().toString()));
+
+	}
+
 	@Test
 	public void save_the_big_stuff() throws Exception {
 		Gson gson = new Gson();
