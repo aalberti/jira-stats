@@ -3,9 +3,13 @@ package aa;
 import java.time.Duration;
 import java.util.Optional;
 
+import org.bson.Document;
 import org.junit.Test;
 
 import com.google.gson.Gson;
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TheBigTest {
@@ -14,15 +18,28 @@ public class TheBigTest {
 		Gson gson = new Gson();
 		JiraConnection jiraConnection = new JiraConnection();
 		jiraConnection.open();
+		MongoDatabase database = new MongoClient().getDatabase("local");
+//		database.createCollection("jiraTest");
+		MongoCollection<Document> jiraTestCollection = database.getCollection("jiraTest");
 		try (JiraConnection ignored = jiraConnection) {
-			assertThat(
-				jiraConnection.fetchIssues()
-					.map(gson::toJson)
-					.doOnNext(j -> System.out.println("Serialized " + j))
-					.test().await()
-					.assertComplete()
-					.values()
-			).isNull();
+			jiraConnection.fetchIssues()
+				.map(i -> new SerializedIssue(i, gson.toJson(i)))
+				.doOnNext(si -> System.out.println("Serialized " + si.json))
+				.doOnNext(si -> jiraTestCollection.insertOne(
+					new Document("key", si.issue.getKey())
+						.append("json", si.json)))
+				.test().await()
+				.assertComplete();
+		}
+	}
+
+	private class SerializedIssue {
+		private Issue issue;
+		private String json;
+
+		SerializedIssue(Issue issue, String json) {
+			this.issue = issue;
+			this.json = json;
 		}
 	}
 
@@ -37,8 +54,8 @@ public class TheBigTest {
 					.map(Issue::getLeadTime)
 					.filter(Optional::isPresent)
 					.map(Optional::get)
-					.reduce(new long[]{0, 0}, (sumAndCount, leadTime) -> new long[]{sumAndCount[0] + leadTime.toMillis(), sumAndCount[1] + 1})
-					.map(sumAndCount -> sumAndCount[0]/sumAndCount[1])
+					.reduce(new long[] { 0, 0 }, (sumAndCount, leadTime) -> new long[] { sumAndCount[0] + leadTime.toMillis(), sumAndCount[1] + 1 })
+					.map(sumAndCount -> sumAndCount[0] / sumAndCount[1])
 					.map(Duration::ofMillis)
 					.test().await()
 					.assertComplete()
