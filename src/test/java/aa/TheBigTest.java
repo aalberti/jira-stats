@@ -19,12 +19,14 @@ public class TheBigTest {
 	@Test
 	public void read_the_big_stuff() throws Exception {
 		Gson gson = new Gson();
-		MongoDatabase database = new MongoClient().getDatabase("local");
-		MongoCollection<Document> jiraTestCollection = database.getCollection("jiraTest");
-		jiraTestCollection.find()
-			.map(d -> gson.fromJson(d.getString("json"), Issue.class))
-			.forEach((Consumer<Issue>) i -> System.out.println("Read " + i.getKey() + " lead time: " + i.getLeadTime().toString()));
-		System.out.println("DB contains " + jiraTestCollection.count());
+		try (MongoClient mongoClient = new MongoClient()) {
+			MongoDatabase database = mongoClient.getDatabase("local");
+			MongoCollection<Document> jiraTestCollection = database.getCollection("jiraTest");
+			jiraTestCollection.find()
+				.map(d -> gson.fromJson(d.getString("json"), Issue.class))
+				.forEach((Consumer<Issue>) i -> System.out.println("Read " + i.getKey() + " lead time: " + i.getLeadTime().toString()));
+			System.out.println("DB contains " + jiraTestCollection.count());
+		}
 	}
 
 	@Test
@@ -32,10 +34,12 @@ public class TheBigTest {
 		Gson gson = new Gson();
 		JiraConnection jiraConnection = new JiraConnection();
 		jiraConnection.open();
-		MongoDatabase database = new MongoClient().getDatabase("local");
-//		database.createCollection("jiraTest");
-		MongoCollection<Document> jiraTestCollection = database.getCollection("jiraTest");
-		try (JiraConnection ignored = jiraConnection) {
+		try (JiraConnection ignored = jiraConnection;
+			 MongoClient mongoClient = new MongoClient()
+		) {
+			MongoDatabase database = mongoClient.getDatabase("local");
+//			database.createCollection("jiraTest");
+			MongoCollection<Document> jiraTestCollection = database.getCollection("jiraTest");
 			jiraConnection.fetchIssues()
 				.map(i -> new SerializedIssue(i, gson.toJson(i)))
 				.doOnNext(si -> System.out.println("Serialized " + si.json))
