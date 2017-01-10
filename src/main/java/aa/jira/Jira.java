@@ -21,13 +21,13 @@ import com.atlassian.util.concurrent.Promise;
 import io.reactivex.Observable;
 import static java.util.Arrays.asList;
 
-public class JiraConnection implements Closeable {
+public class Jira implements Closeable {
 
 	private static final HashSet<String> FIELDS = new HashSet<>(asList("summary", "issuetype", "created", "updated", "project", "status"));
 	private JiraRestClient jiraRestClient;
 	private IssueMapper mapper;
 
-	public JiraConnection() {
+	public Jira() {
 		this.mapper = new IssueMapper();
 	}
 

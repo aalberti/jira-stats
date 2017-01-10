@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import org.bson.Document;
 import org.junit.Test;
 
-import aa.jira.JiraConnection;
+import aa.jira.Jira;
 import com.google.gson.Gson;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
@@ -22,11 +22,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class TheBigTest {
 	@Test
 	public void fetch_the_big_stuff() throws Exception {
-		JiraConnection jiraConnection = new JiraConnection();
-		jiraConnection.open();
-		try (JiraConnection ignored = jiraConnection) {
+		Jira jira = new Jira();
+		jira.open();
+		try (Jira ignored = jira) {
 			assertThat(
-				jiraConnection.fetchIssues()
+				jira.fetchIssues()
 					.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
 					.map(Issue::getLeadTime)
 					.filter(Optional::isPresent)
@@ -44,14 +44,14 @@ public class TheBigTest {
 
 	@Test
 	public void save_the_big_stuff() throws Exception {
-		JiraConnection jiraConnection = new JiraConnection();
-		jiraConnection.open();
+		Jira jira = new Jira();
+		jira.open();
 		IssueDB db = new IssueDB();
 		db.open();
-		try (JiraConnection ignored = jiraConnection;
+		try (Jira ignored = jira;
 			 IssueDB ignored2 = db
 		) {
-			jiraConnection.fetchIssues()
+			jira.fetchIssues()
 				.doOnNext(i -> System.out.println("Saving " + i.getKey()))
 				.doOnNext(db::save)
 				.test().await()
