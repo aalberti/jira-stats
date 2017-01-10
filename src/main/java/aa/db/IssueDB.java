@@ -7,11 +7,13 @@ import org.bson.Document;
 
 import aa.Issue;
 import com.google.gson.Gson;
-import com.mongodb.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoClients;
+import com.mongodb.reactivestreams.client.MongoCollection;
+import com.mongodb.reactivestreams.client.MongoDatabase;
+import io.reactivex.Observable;
+import io.reactivex.subscribers.TestSubscriber;
 import static com.mongodb.client.model.Filters.eq;
 
 public class IssueDB implements Closeable {
@@ -24,7 +26,7 @@ public class IssueDB implements Closeable {
 	}
 
 	public void open() {
-		this.mongoClient = new MongoClient();
+		this.mongoClient = MongoClients.create();
 		MongoDatabase database = this.mongoClient.getDatabase("jira-stats");
 		collection = database.getCollection("issues");
 	}
@@ -45,13 +47,23 @@ public class IssueDB implements Closeable {
 			new UpdateOptions().upsert(true));
 	}
 
-	public MongoIterable<Issue> readAll() {
-		return collection.find()
-			.map(d -> gson.fromJson(d.getString("json"), Issue.class));
-	}
+	public Observable<Issue> readAll() {
+		return Observable.<Document>create(subscriber -> collection.find().subscribe(new TestSubscriber<Document>() {
+			@Override
+			public void onNext(Document document) {
+				subscriber.onNext(document);
+			}
 
-	public long count() {
-		return collection.count();
+			@Override
+			public void onError(Throwable t) {
+				subscriber.onError(t);
+			}
+
+			@Override
+			public void onComplete() {
+				subscriber.onComplete();
+			}
+		})).map(d -> gson.fromJson(d.getString("json"), Issue.class));
 	}
 
 	private class SerializedIssue {

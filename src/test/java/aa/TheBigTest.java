@@ -2,7 +2,6 @@ package aa;
 
 import java.time.Duration;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import org.junit.Test;
 
@@ -56,8 +55,10 @@ public class TheBigTest {
 		db.open();
 		try (IssueDB ignored = db) {
 			db.readAll()
-				.forEach((Consumer<Issue>) i -> System.out.println("Read " + i.getKey() + " lead time: " + i.getLeadTime().toString()));
-			System.out.println("DB contains " + db.count());
+				.doOnNext(i -> System.out.println("Read " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
+				.count()
+				.doAfterSuccess(count -> System.out.println("DB contains " + count))
+				.blockingGet();
 		}
 	}
 }
