@@ -1,5 +1,7 @@
 package aa;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -31,40 +33,6 @@ public class TheBigTest {
 	}
 
 	@Test
-	public void save_the_big_stuff() throws Exception {
-		Gson gson = new Gson();
-		JiraConnection jiraConnection = new JiraConnection();
-		jiraConnection.open();
-		try (JiraConnection ignored = jiraConnection;
-			 MongoClient mongoClient = new MongoClient()
-		) {
-			MongoDatabase database = mongoClient.getDatabase("local");
-			MongoCollection<Document> jiraTestCollection = database.getCollection("jiraTest");
-			jiraConnection.fetchIssues()
-				.map(i -> new SerializedIssue(i, gson.toJson(i)))
-				.doOnNext(si -> System.out.println("Serialized " + si.json))
-				.doOnNext(si -> jiraTestCollection.replaceOne(
-					eq("key", si.issue.getKey()),
-					new Document("key", si.issue.getKey())
-						.append("json", si.json),
-					new UpdateOptions().upsert(true))
-				)
-				.test().await()
-				.assertComplete();
-		}
-	}
-
-	private class SerializedIssue {
-		private Issue issue;
-		private String json;
-
-		SerializedIssue(Issue issue, String json) {
-			this.issue = issue;
-			this.json = json;
-		}
-	}
-
-	@Test
 	public void fetch_the_big_stuff() throws Exception {
 		JiraConnection jiraConnection = new JiraConnection();
 		jiraConnection.open();
@@ -83,6 +51,64 @@ public class TheBigTest {
 					.values())
 				.hasSize(1)
 				.allMatch(averageLeadTime -> averageLeadTime.toDays() > 10);
+		}
+	}
+
+	@Test
+	public void save_the_big_stuff() throws Exception {
+		JiraConnection jiraConnection = new JiraConnection();
+		jiraConnection.open();
+		IssueDB db = new IssueDB();
+		db.open();
+		try (JiraConnection ignored = jiraConnection;
+			 IssueDB ignored2 = db
+		) {
+			jiraConnection.fetchIssues()
+				.doOnNext(db::save)
+				.test().await()
+				.assertComplete();
+		}
+	}
+
+	private static class IssueDB implements Closeable {
+		private MongoClient mongoClient = null;
+		private final Gson gson;
+		private MongoCollection<Document> collection;
+
+		public IssueDB() {
+			this.gson = new Gson();
+		}
+
+		public void open() {
+			this.mongoClient = new MongoClient();
+			MongoDatabase database = this.mongoClient.getDatabase("jira-stats");
+			collection = database.getCollection("issues");
+		}
+
+		@Override
+		public void close() throws IOException {
+			if (mongoClient != null) {
+				mongoClient.close();
+			}
+		}
+
+		private void save(Issue issue) {
+			SerializedIssue si = new SerializedIssue(issue, gson.toJson(issue));
+			collection.replaceOne(
+					eq("key", si.issue.getKey()),
+					new Document("key", si.issue.getKey())
+						.append("json", si.json),
+					new UpdateOptions().upsert(true));
+		}
+
+		private class SerializedIssue {
+			private Issue issue;
+			private String json;
+
+			SerializedIssue(Issue issue, String json) {
+				this.issue = issue;
+				this.json = json;
+			}
 		}
 	}
 }
