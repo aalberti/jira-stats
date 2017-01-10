@@ -14,24 +14,12 @@ import com.google.gson.Gson;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.UpdateOptions;
 import static com.mongodb.client.model.Filters.eq;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TheBigTest {
-	@Test
-	public void read_the_big_stuff() throws Exception {
-		Gson gson = new Gson();
-		try (MongoClient mongoClient = new MongoClient()) {
-			MongoDatabase database = mongoClient.getDatabase("local");
-			MongoCollection<Document> jiraTestCollection = database.getCollection("jiraTest");
-			jiraTestCollection.find()
-				.map(d -> gson.fromJson(d.getString("json"), Issue.class))
-				.forEach((Consumer<Issue>) i -> System.out.println("Read " + i.getKey() + " lead time: " + i.getLeadTime().toString()));
-			System.out.println("DB contains " + jiraTestCollection.count());
-		}
-	}
-
 	@Test
 	public void fetch_the_big_stuff() throws Exception {
 		JiraConnection jiraConnection = new JiraConnection();
@@ -64,9 +52,21 @@ public class TheBigTest {
 			 IssueDB ignored2 = db
 		) {
 			jiraConnection.fetchIssues()
+				.doOnNext(i -> System.out.println("Saving " + i.getKey()))
 				.doOnNext(db::save)
 				.test().await()
 				.assertComplete();
+		}
+	}
+
+	@Test
+	public void read_the_big_stuff() throws Exception {
+		IssueDB db = new IssueDB();
+		db.open();
+		try (IssueDB ignored = db) {
+			db.readAll()
+				.forEach((Consumer<Issue>) i -> System.out.println("Read " + i.getKey() + " lead time: " + i.getLeadTime().toString()));
+			System.out.println("DB contains " + db.count());
 		}
 	}
 
@@ -92,13 +92,22 @@ public class TheBigTest {
 			}
 		}
 
-		private void save(Issue issue) {
+		public void save(Issue issue) {
 			SerializedIssue si = new SerializedIssue(issue, gson.toJson(issue));
 			collection.replaceOne(
-					eq("key", si.issue.getKey()),
-					new Document("key", si.issue.getKey())
-						.append("json", si.json),
-					new UpdateOptions().upsert(true));
+				eq("key", si.issue.getKey()),
+				new Document("key", si.issue.getKey())
+					.append("json", si.json),
+				new UpdateOptions().upsert(true));
+		}
+
+		public MongoIterable<Issue> readAll() {
+			return collection.find()
+				.map(d -> gson.fromJson(d.getString("json"), Issue.class));
+		}
+
+		public long count() {
+			return collection.count();
 		}
 
 		private class SerializedIssue {
