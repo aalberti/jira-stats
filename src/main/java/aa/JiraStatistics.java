@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 
+import aa.jira.JiraConnection;
+
 public class JiraStatistics {
 	public static void main(String[] args) throws URISyntaxException, ExecutionException, InterruptedException, IOException {
 		get("PRIN-3047");

@@ -1,7 +1,9 @@
-package aa;
+package aa.jira;
 
 import org.junit.Test;
 
+import aa.Issue;
+import aa.JiraStatistics;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class JiraStatisticsTest {

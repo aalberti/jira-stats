@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import org.bson.Document;
 import org.junit.Test;
 
+import aa.jira.JiraConnection;
 import com.google.gson.Gson;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;

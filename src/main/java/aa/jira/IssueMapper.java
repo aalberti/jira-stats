@@ -1,4 +1,4 @@
-package aa;
+package aa.jira;
 
 import java.time.Instant;
 import java.util.List;
@@ -7,6 +7,8 @@ import java.util.stream.StreamSupport;
 
 import org.joda.time.DateTime;
 
+import aa.Issue;
+import aa.Transition;
 import com.atlassian.jira.rest.client.api.domain.ChangelogGroup;
 import com.atlassian.jira.rest.client.api.domain.ChangelogItem;
 import static aa.Issue.Builder.issue;

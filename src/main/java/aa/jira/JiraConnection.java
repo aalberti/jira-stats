@@ -1,4 +1,4 @@
-package aa;
+package aa.jira;
 
 import java.io.Closeable;
 import java.io.FileInputStream;
@@ -11,6 +11,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Properties;
 
+import aa.Issue;
 import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
@@ -18,12 +19,11 @@ import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.atlassian.util.concurrent.Promise;
 import io.reactivex.Observable;
-import static aa.IssueMapper.stream;
 import static java.util.Arrays.asList;
 
 public class JiraConnection implements Closeable {
 
-	public static final HashSet<String> FIELDS = new HashSet<>(asList("summary", "issuetype", "created", "updated", "project", "status"));
+	private static final HashSet<String> FIELDS = new HashSet<>(asList("summary", "issuetype", "created", "updated", "project", "status"));
 	private JiraRestClient jiraRestClient;
 	private IssueMapper mapper;
 
@@ -76,7 +76,7 @@ public class JiraConnection implements Closeable {
 				return;
 			Promise<SearchResult> searchResultPromise = jiraRestClient.getSearchClient().searchJql("project = ppc", 1000, 0, FIELDS);
 			searchResultPromise.fail(subscriber::onError);
-			stream(searchResultPromise.get().getIssues()).forEach(subscriber::onNext);
+			IssueMapper.stream(searchResultPromise.get().getIssues()).forEach(subscriber::onNext);
 			subscriber.onComplete();
 		}).map(jiraIssue -> {
 			try {
