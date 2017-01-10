@@ -1,12 +1,16 @@
 package aa;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.Test;
 
 import aa.db.IssueDB;
 import aa.jira.Jira;
+import io.reactivex.observables.GroupedObservable;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TheBigTest {
@@ -59,6 +63,23 @@ public class TheBigTest {
 				.count()
 				.doAfterSuccess(count -> System.out.println("DB contains " + count))
 				.blockingGet();
+		}
+	}
+
+	@Test
+	public void distribute_the_big_stuff() throws Exception {
+		IssueDB db = new IssueDB();
+		db.open();
+		try (IssueDB ignored = db) {
+			db.readAll()
+				.filter(i -> i.getLeadTime().isPresent())
+				.groupBy(i -> i.getLeadTime().get().toDays())
+				.sorted(comparing(GroupedObservable::getKey))
+				.doOnNext(delay -> {
+					List<String> issueKeys = delay.map(Issue::getKey).toList().blockingGet();
+					System.out.println("" + delay.getKey() + ": " + issueKeys.size() + " " + issueKeys.stream().collect(joining(", ", "(", ")")));
+				})
+				.test().await();
 		}
 	}
 }
