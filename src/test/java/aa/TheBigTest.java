@@ -38,7 +38,6 @@ public class TheBigTest {
 			 MongoClient mongoClient = new MongoClient()
 		) {
 			MongoDatabase database = mongoClient.getDatabase("local");
-//			database.createCollection("jiraTest");
 			MongoCollection<Document> jiraTestCollection = database.getCollection("jiraTest");
 			jiraConnection.fetchIssues()
 				.map(i -> new SerializedIssue(i, gson.toJson(i)))
@@ -65,7 +64,7 @@ public class TheBigTest {
 	}
 
 	@Test
-	public void gimme_the_big_stuff() throws Exception {
+	public void fetch_the_big_stuff() throws Exception {
 		JiraConnection jiraConnection = new JiraConnection();
 		jiraConnection.open();
 		try (JiraConnection ignored = jiraConnection) {
