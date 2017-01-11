@@ -74,7 +74,7 @@ public class Jira implements Closeable {
 		return Observable.<com.atlassian.jira.rest.client.api.domain.Issue>create(subscriber -> {
 			if (subscriber.isDisposed())
 				return;
-			Promise<SearchResult> searchResultPromise = jiraRestClient.getSearchClient().searchJql("project = ppc", 1000, 0, FIELDS);
+			Promise<SearchResult> searchResultPromise = jiraRestClient.getSearchClient().searchJql("project in (ppc,pcom)", 1000, 0, FIELDS);
 			searchResultPromise.fail(subscriber::onError);
 			IssueMapper.stream(searchResultPromise.get().getIssues()).forEach(subscriber::onNext);
 			subscriber.onComplete();
