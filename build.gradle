@@ -1,7 +1,6 @@
 group 'com.primasol.aa'
 version '1.0-SNAPSHOT'
 
-apply plugin: 'groovy'
 apply plugin: 'java'
 
 repositories {
@@ -12,7 +11,6 @@ repositories {
 }
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all:2.3.11'
     compile group: 'com.atlassian.jira', name: 'jira-rest-java-client-core', version: '4.0.0'
     compile "com.atlassian.fugue:fugue:2.2.1"
     compile group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.0.3'
