@@ -40,6 +40,13 @@ public class JiraTest {
 	}
 
 	@Test
+	public void project() throws Exception {
+		Issue issue = jira.fetchIssue("PRIN-3046").get();
+		assertThat(issue.getProject())
+			.isEqualTo("PRIN");
+	}
+
+	@Test
 	public void lastClosureDate() throws Exception {
 		Issue issueClosedTwice = jira.fetchIssue("PPC-11").get();
 		assertThat(issueClosedTwice.getClosureDate())

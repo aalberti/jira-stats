@@ -22,6 +22,7 @@ class IssueMapper {
 			.collect(toList());
 		return issue()
 			.withKey(jiraIssue.getKey())
+			.withProject(jiraIssue.getProject().getKey())
 			.withCreationDate(toInstant(jiraIssue.getCreationDate()))
 			.withHistory(history)
 			.build();
@@ -40,8 +41,8 @@ class IssueMapper {
 			.build();
 	}
 
-	private static Instant toInstant(DateTime jodaDateTime) {
-		return Instant.ofEpochMilli(jodaDateTime.getMillis());
+	private static Instant toInstant(DateTime dateTime) {
+		return Instant.ofEpochMilli(dateTime.getMillis());
 	}
 
 	public static <T> Stream<T> stream(Iterable<T> ts) {

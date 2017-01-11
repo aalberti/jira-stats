@@ -11,9 +11,11 @@ public class Issue {
 	private String key;
 	private List<Transition> history;
 	private Instant creationDate;
+	private String project;
 
-	private Issue(String key, Instant creationDate, List<Transition> history) {
+	private Issue(String key, String project, Instant creationDate, List<Transition> history) {
 		this.key = key;
+		this.project = project;
 		this.creationDate = creationDate;
 		this.history = history;
 	}
@@ -40,8 +42,13 @@ public class Issue {
 		return creationDate;
 	}
 
+	public String getProject() {
+		return project;
+	}
+
 	public static class Builder {
 		private String key;
+		private String project;
 		private Instant creationDate;
 		private List<Transition> history;
 
@@ -51,6 +58,11 @@ public class Issue {
 
 		public Builder withKey(String key) {
 			this.key = key;
+			return this;
+		}
+
+		public Builder withProject(String project) {
+			this.project = project;
 			return this;
 		}
 
@@ -65,7 +77,7 @@ public class Issue {
 		}
 
 		public Issue build() {
-			return new Issue(key, creationDate, history);
+			return new Issue(key, project, creationDate, history);
 		}
 	}
 }
