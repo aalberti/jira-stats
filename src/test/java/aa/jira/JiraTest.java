@@ -8,8 +8,7 @@ import aa.Issue;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class JiraTest {
-
-	private Jira jira = null;
+	private Jira jira;
 
 	@Before
 	public void setUp() throws Exception {
@@ -19,10 +18,7 @@ public class JiraTest {
 
 	@After
 	public void tearDown() throws Exception {
-		if (jira != null) {
-			jira.close();
-		}
-		jira = null;
+		jira.close();
 	}
 
 	@Test
