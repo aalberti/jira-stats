@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import aa.Issue;
 import com.atlassian.util.concurrent.Promise;
+import com.google.common.annotations.VisibleForTesting;
 import io.reactivex.Observable;
 
 public class Jira implements Closeable {
@@ -12,8 +13,13 @@ public class Jira implements Closeable {
 	private JiraConnection connection;
 
 	public Jira() {
+		this(new JiraConnection());
+	}
+
+	@VisibleForTesting
+	Jira(JiraConnection connection) {
+		this.connection = connection;
 		mapper = new IssueMapper();
-		connection = new JiraConnection();
 	}
 
 	public void open() {

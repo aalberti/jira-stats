@@ -29,13 +29,6 @@ public class JiraTest {
 	}
 
 	@Test
-	public void history() throws Exception {
-		Issue issue = jira.fetchIssue("PRIN-3046").get();
-		assertThat(issue.getHistory())
-			.hasSize(24);
-	}
-
-	@Test
 	public void project() throws Exception {
 		Issue issue = jira.fetchIssue("PRIN-3046").get();
 		assertThat(issue.getProject())
@@ -43,30 +36,16 @@ public class JiraTest {
 	}
 
 	@Test
+	public void history() throws Exception {
+		Issue issue = jira.fetchIssue("PRIN-3046").get();
+		assertThat(issue.getHistory())
+			.hasSize(24);
+	}
+
+	@Test
 	public void lastClosureDate() throws Exception {
 		Issue issueClosedTwice = jira.fetchIssue("PPC-11").get();
 		assertThat(issueClosedTwice.getClosureDate())
 			.hasValueSatisfying(t -> assertThat(t.toString()).isEqualTo("2016-12-29T10:33:40Z"));
-	}
-
-	@Test
-	public void lastClosureDate_isEmpty_when_openIssue() throws Exception {
-		Issue openIssue = jira.fetchIssue("PRIN-2276").get();
-		assertThat(openIssue.getClosureDate())
-			.isEmpty();
-	}
-
-	@Test
-	public void leadTime() throws Exception {
-		Issue issueClosedTwice = jira.fetchIssue("PPC-11").get();
-		assertThat(issueClosedTwice.getLeadTime())
-			.hasValueSatisfying(t -> assertThat(t.toString()).isEqualTo("PT3051H22M35S"));
-	}
-
-	@Test
-	public void leadTime_isEmpty_when_openIssue() throws Exception {
-		Issue openIssue = jira.fetchIssue("PRIN-2276").get();
-		assertThat(openIssue.getLeadTime())
-			.isEmpty();
 	}
 }
