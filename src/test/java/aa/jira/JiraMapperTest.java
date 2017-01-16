@@ -76,7 +76,7 @@ public class JiraMapperTest {
 		connectionMock.issue()
 			.withKey("KEY")
 			.mock();
-		jira.fetchIssuesUpdatedSince(Instant.parse("2016-12-12T00:00:00Z"))
+		jira.fetchIssues(jira.updatedSince(Instant.parse("2016-12-12T00:00:00Z")))
 			.map(Issue::getKey)
 			.test().await()
 			.assertValue("KEY");

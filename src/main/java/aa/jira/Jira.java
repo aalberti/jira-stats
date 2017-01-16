@@ -45,11 +45,28 @@ public class Jira implements Closeable {
 		return connection.fetchIssues("project in (ppc,pcom)").map(mapper::toIssue);
 	}
 
-	public Observable<Issue> fetchIssuesUpdatedSince(Instant since) {
-		return connection.fetchIssues("updated >= " + format(since)).map(mapper::toIssue);
+	public Filter updatedSince(Instant since) {
+		return new Filter().updatedSince(since);
 	}
 
-	private String format(Instant instant) {
-		return TIME_FORMATTER.format(instant);
+	public Observable<Issue> fetchIssues(Filter filter) {
+		return connection.fetchIssues(filter.toJql()).map(mapper::toIssue);
+	}
+
+	private static class Filter {
+		private Instant updatedSince;
+
+		public Filter updatedSince(Instant since) {
+			this.updatedSince = since;
+			return this;
+		}
+
+		public String toJql() {
+			return "updated >= " + format(updatedSince);
+		}
+
+		private String format(Instant instant) {
+			return TIME_FORMATTER.format(instant);
+		}
 	}
 }
