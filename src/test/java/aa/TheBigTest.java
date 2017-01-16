@@ -9,6 +9,7 @@ import org.junit.Test;
 import aa.db.IssueDB;
 import aa.jira.Jira;
 import io.reactivex.observables.GroupedObservable;
+import static aa.jira.Jira.updatedSince;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.util.Comparator.comparing;
@@ -44,7 +45,7 @@ public class TheBigTest {
 		Jira jira = new Jira();
 		jira.open();
 		try (Jira ignored = jira) {
-			jira.fetchIssues(jira.updatedSince(now().minus(20, MINUTES)))
+			jira.fetchIssues(updatedSince(now().minus(20, MINUTES)))
 				.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
 				.test().await()
 				.assertComplete();
@@ -78,14 +79,14 @@ public class TheBigTest {
 			 IssueDB ignored2 = db) {
 			System.out.println(">>> First batch");
 			db.startBatch();
-			jira.fetchIssues(jira.updatedSince(now().minus(20, MINUTES)))
+			jira.fetchIssues(updatedSince(now().minus(20, MINUTES)))
 				.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
 				.doOnNext(db::save)
 				.test().await()
 				.assertComplete();
 			db.batchDone();
 			System.out.println(">>> Second batch");
-			jira.fetchIssues(jira.updatedSince(db.getLastUpdateInstant().get()))
+			jira.fetchIssues(updatedSince(db.getLastUpdateInstant().get()))
 				.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
 				.doOnNext(db::save)
 				.test().await()
@@ -102,7 +103,7 @@ public class TheBigTest {
 		try (Jira ignored = jira;
 			 IssueDB ignored2 = db) {
 			System.out.println("Batch from" + db.getLastUpdateInstant());
-			jira.fetchIssues(jira.updatedSince(db.getLastUpdateInstant().get()))
+			jira.fetchIssues(updatedSince(db.getLastUpdateInstant().get()))
 				.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
 				.doOnNext(db::save)
 				.test().await()

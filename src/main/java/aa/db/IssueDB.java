@@ -19,6 +19,7 @@ import com.mongodb.client.result.UpdateResult;
 import io.reactivex.Observable;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.exists;
+import static java.time.Instant.now;
 
 public class IssueDB implements Closeable {
 	private final Gson gson;
@@ -59,7 +60,11 @@ public class IssueDB implements Closeable {
 	}
 
 	public void startBatch() {
-		lastUpdateInstant = Instant.now();
+		startBatch(now());
+	}
+
+	public void startBatch(Instant batchEnd) {
+		lastUpdateInstant = batchEnd;
 	}
 
 	public void save(Issue issue) {
