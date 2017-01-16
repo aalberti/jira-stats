@@ -69,6 +69,48 @@ public class TheBigTest {
 	}
 
 	@Test
+	public void save_twice() throws Exception {
+		Jira jira = new Jira();
+		jira.open();
+		IssueDB db = new IssueDB();
+		db.open();
+		try (Jira ignored = jira;
+			 IssueDB ignored2 = db) {
+			System.out.println(">>> First batch");
+			db.startBatch();
+			jira.fetchIssuesUpdatedSince(now().minus(20, MINUTES))
+				.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
+				.doOnNext(db::save)
+				.test().await()
+				.assertComplete();
+			db.batchDone();
+			System.out.println(">>> Second batch");
+			jira.fetchIssuesUpdatedSince(db.getLastUpdateInstant())
+				.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
+				.doOnNext(db::save)
+				.test().await()
+				.assertComplete();
+		}
+	}
+
+	@Test
+	public void save_since_previous() throws Exception {
+		Jira jira = new Jira();
+		jira.open();
+		IssueDB db = new IssueDB();
+		db.open();
+		try (Jira ignored = jira;
+			 IssueDB ignored2 = db) {
+			System.out.println("Batch from" + db.getLastUpdateInstant());
+			jira.fetchIssuesUpdatedSince(db.getLastUpdateInstant())
+				.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
+				.doOnNext(db::save)
+				.test().await()
+				.assertComplete();
+		}
+	}
+
+	@Test
 	public void read_the_big_stuff() throws Exception {
 		IssueDB db = new IssueDB();
 		db.open();
