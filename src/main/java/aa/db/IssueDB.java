@@ -2,22 +2,29 @@ package aa.db;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.function.Consumer;
 
 import org.bson.Document;
 
 import aa.Issue;
 import com.google.gson.Gson;
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
 import io.reactivex.Observable;
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.exists;
 
 public class IssueDB implements Closeable {
 	private final Gson gson;
 	private final String name;
-	private com.mongodb.MongoClient mongoClient;
-	private com.mongodb.client.MongoCollection<Document> collection;
+	private MongoClient mongoClient;
+	private MongoCollection<Document> issues;
+	private MongoCollection<Document> globals;
+	private Instant lastUpdateInstant;
 
 	public IssueDB() {
 		this("jira_stats");
@@ -29,10 +36,11 @@ public class IssueDB implements Closeable {
 	}
 
 	public void open() {
-		mongoClient = new com.mongodb.MongoClient();
-		collection = mongoClient
-			.getDatabase(name)
-			.getCollection("issues");
+		mongoClient = new MongoClient();
+		MongoDatabase db = mongoClient
+			.getDatabase(name);
+		issues = db.getCollection("issues");
+		globals = db.getCollection("globals");
 	}
 
 	@Override
@@ -47,9 +55,13 @@ public class IssueDB implements Closeable {
 		mongoClient.dropDatabase(name);
 	}
 
+	public void startBatch() {
+		lastUpdateInstant = Instant.now();
+	}
+
 	public void save(Issue issue) {
 		SerializedIssue si = new SerializedIssue(issue, gson.toJson(issue));
-		UpdateResult result = collection.replaceOne(
+		UpdateResult result = issues.replaceOne(
 			eq("key", si.issue.getKey()),
 			new Document("key", si.issue.getKey())
 				.append("json", si.json),
@@ -57,12 +69,23 @@ public class IssueDB implements Closeable {
 		System.out.println("upserted: " + result.getUpsertedId() + ", matched: " + result.getMatchedCount() + ", modified: " + result.getModifiedCount());
 	}
 
+	public void batchDone() {
+		globals.replaceOne(
+			exists("_id"),
+			new Document("lastUpdateInstant", lastUpdateInstant.toString()),
+			new UpdateOptions().upsert(true));
+	}
+
+	public Instant getLastUpdateInstant() {
+		return Instant.parse(globals.find(exists("_id")).first().getString("lastUpdateInstant"));
+	}
+
 	public Observable<Issue> readAll() {
 		return Observable.<Document>create(subscriber -> {
 			if (subscriber.isDisposed())
 				return;
 			try {
-				collection.find().forEach((Consumer<? super Document>) subscriber::onNext);
+				issues.find().forEach((Consumer<? super Document>) subscriber::onNext);
 			}
 			catch (Exception e) {
 				subscriber.onError(e);
