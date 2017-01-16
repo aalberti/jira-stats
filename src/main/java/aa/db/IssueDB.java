@@ -3,6 +3,7 @@ package aa.db;
 import java.io.Closeable;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.bson.Document;
@@ -76,8 +77,12 @@ public class IssueDB implements Closeable {
 			new UpdateOptions().upsert(true));
 	}
 
-	public Instant getLastUpdateInstant() {
-		return Instant.parse(globals.find(exists("_id")).first().getString("lastUpdateInstant"));
+	public Optional<Instant> getLastUpdateInstant() {
+		return Optional.ofNullable(globals
+			.find(exists("_id"))
+			.first())
+			.map(doc -> doc.getString("lastUpdateInstant"))
+			.map(Instant::parse);
 	}
 
 	public Observable<Issue> readAll() {

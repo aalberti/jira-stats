@@ -15,6 +15,7 @@ import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("OptionalGetWithoutIsPresent")
 public class TheBigTest {
 	@Test
 	public void fetch_the_big_stuff() throws Exception {
@@ -46,8 +47,7 @@ public class TheBigTest {
 			jira.fetchIssuesUpdatedSince(now().minus(20, MINUTES))
 				.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
 				.test().await()
-				.assertComplete()
-				.assertValueCount(42);
+				.assertComplete();
 		}
 	}
 
@@ -85,7 +85,7 @@ public class TheBigTest {
 				.assertComplete();
 			db.batchDone();
 			System.out.println(">>> Second batch");
-			jira.fetchIssuesUpdatedSince(db.getLastUpdateInstant())
+			jira.fetchIssuesUpdatedSince(db.getLastUpdateInstant().get())
 				.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
 				.doOnNext(db::save)
 				.test().await()
@@ -102,7 +102,7 @@ public class TheBigTest {
 		try (Jira ignored = jira;
 			 IssueDB ignored2 = db) {
 			System.out.println("Batch from" + db.getLastUpdateInstant());
-			jira.fetchIssuesUpdatedSince(db.getLastUpdateInstant())
+			jira.fetchIssuesUpdatedSince(db.getLastUpdateInstant().get())
 				.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
 				.doOnNext(db::save)
 				.test().await()

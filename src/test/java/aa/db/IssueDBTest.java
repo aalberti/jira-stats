@@ -16,6 +16,7 @@ import static java.time.temporal.ChronoUnit.HOURS;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("OptionalGetWithoutIsPresent")
 public class IssueDBTest {
 	private IssueDB db;
 
@@ -103,11 +104,9 @@ public class IssueDBTest {
 	}
 
 	private Instant lastUpdateInstant() throws IOException {
-		Instant lastUpdateInstant;
 		try (IssueDB anotherDB = createDB()) {
-			lastUpdateInstant = anotherDB.getLastUpdateInstant();
+			return anotherDB.getLastUpdateInstant().get();
 		}
-		return lastUpdateInstant;
 	}
 
 	private IssueDB createDB() {
