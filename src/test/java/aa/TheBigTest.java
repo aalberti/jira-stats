@@ -9,6 +9,8 @@ import org.junit.Test;
 import aa.db.IssueDB;
 import aa.jira.Jira;
 import io.reactivex.observables.GroupedObservable;
+import static java.time.Instant.now;
+import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +35,19 @@ public class TheBigTest {
 					.values())
 				.hasSize(1)
 				.allMatch(averageLeadTime -> averageLeadTime.toDays() > 10);
+		}
+	}
+
+	@Test
+	public void fetch_updated_since() throws Exception {
+		Jira jira = new Jira();
+		jira.open();
+		try (Jira ignored = jira) {
+			jira.fetchIssuesUpdatedSince(now().minus(20, MINUTES))
+				.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
+				.test().await()
+				.assertComplete()
+				.assertValueCount(42);
 		}
 	}
 

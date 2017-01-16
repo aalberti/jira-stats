@@ -11,8 +11,10 @@ import com.atlassian.jira.rest.client.api.domain.BasicUser;
 import com.atlassian.jira.rest.client.api.domain.ChangelogGroup;
 import com.atlassian.jira.rest.client.api.domain.ChangelogItem;
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import io.reactivex.Observable;
 import static com.atlassian.util.concurrent.Promises.promise;
 import static java.util.Collections.singletonList;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 public class JiraConnectionMock {
@@ -55,6 +57,7 @@ public class JiraConnectionMock {
 				null, null, null, creationDate, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
 				null, changelog, null, null);
 			when(connection.fetchIssue(key)).thenReturn(promise(issue));
+			when(connection.fetchIssues(anyString())).thenReturn(Observable.just(issue));
 		}
 
 	}

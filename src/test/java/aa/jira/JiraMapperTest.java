@@ -1,5 +1,7 @@
 package aa.jira;
 
+import java.time.Instant;
+
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
@@ -67,5 +69,16 @@ public class JiraMapperTest {
 		Issue openIssue = jira.fetchIssue("FOO-42").get();
 		assertThat(openIssue.getLeadTime())
 			.isEmpty();
+	}
+
+	@Test
+	public void updatedSince() throws Exception {
+		connectionMock.issue()
+			.withKey("KEY")
+			.mock();
+		jira.fetchIssuesUpdatedSince(Instant.parse("2016-12-12T00:00:00Z"))
+			.map(Issue::getKey)
+			.test().await()
+			.assertValue("KEY");
 	}
 }

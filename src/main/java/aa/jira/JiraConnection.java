@@ -63,11 +63,11 @@ class JiraConnection implements Closeable{
 			.getIssue(issueKey, EnumSet.of(IssueRestClient.Expandos.CHANGELOG));
 	}
 
-	Observable<Issue> fetchIssues() {
-		return Observable.<com.atlassian.jira.rest.client.api.domain.Issue>create(subscriber -> {
+	Observable<Issue> fetchIssues(String jql) {
+		return Observable.<Issue>create(subscriber -> {
 			if (subscriber.isDisposed())
 				return;
-			Promise<SearchResult> searchResultPromise = jiraRestClient.getSearchClient().searchJql("project in (ppc,pcom)", 1000, 0, FIELDS);
+			Promise<SearchResult> searchResultPromise = jiraRestClient.getSearchClient().searchJql(jql, 1000, 0, FIELDS);
 			searchResultPromise.fail(subscriber::onError);
 			IssueMapper.stream(searchResultPromise.get().getIssues()).forEach(subscriber::onNext);
 			subscriber.onComplete();
