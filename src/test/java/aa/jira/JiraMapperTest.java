@@ -1,6 +1,8 @@
 package aa.jira;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import org.joda.time.DateTime;
 import org.junit.After;
@@ -8,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import aa.Issue;
+import static aa.jira.Jira.updatedSince;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class JiraMapperTest {
@@ -72,13 +75,21 @@ public class JiraMapperTest {
 	}
 
 	@Test
-	public void updatedSince() throws Exception {
+	public void updated_since() throws Exception {
 		connectionMock.issue()
 			.withKey("KEY")
+			.withJql("updated >= \"2016-12-12 00:00\"")
 			.mock();
-		jira.fetchIssues(jira.updatedSince(Instant.parse("2016-12-12T00:00:00Z")))
+		jira.fetchIssues(updatedSince(parisTime("2016-12-12 00:00")))
 			.map(Issue::getKey)
 			.test().await()
 			.assertValue("KEY");
+	}
+
+	private Instant parisTime(String time) {
+		return Instant.from(DateTimeFormatter
+			.ofPattern("yyyy-MM-dd HH:mm")
+			.withZone(ZoneId.of("Europe/Paris"))
+			.parse(time));
 	}
 }

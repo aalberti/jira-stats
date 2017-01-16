@@ -12,9 +12,6 @@ import com.google.common.annotations.VisibleForTesting;
 import io.reactivex.Observable;
 
 public class Jira implements Closeable {
-	private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter
-		.ofPattern("\"yyyy-MM-dd HH:mm\"")
-		.withZone(ZoneId.of("Europe/Paris"));
 	private IssueMapper mapper;
 	private JiraConnection connection;
 
@@ -45,23 +42,28 @@ public class Jira implements Closeable {
 		return connection.fetchIssues("project in (ppc,pcom)").map(mapper::toIssue);
 	}
 
-	public Filter updatedSince(Instant since) {
+	public Observable<Issue> fetchIssues(Filter filter) {
+		return connection
+			.fetchIssues(filter.toJql())
+			.map(mapper::toIssue);
+	}
+
+	public static Filter updatedSince(Instant since) {
 		return new Filter().updatedSince(since);
 	}
 
-	public Observable<Issue> fetchIssues(Filter filter) {
-		return connection.fetchIssues(filter.toJql()).map(mapper::toIssue);
-	}
-
 	private static class Filter {
+		private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter
+			.ofPattern("\"yyyy-MM-dd HH:mm\"")
+			.withZone(ZoneId.of("Europe/Paris"));
 		private Instant updatedSince;
 
-		public Filter updatedSince(Instant since) {
+		private Filter updatedSince(Instant since) {
 			this.updatedSince = since;
 			return this;
 		}
 
-		public String toJql() {
+		private String toJql() {
 			return "updated >= " + format(updatedSince);
 		}
 

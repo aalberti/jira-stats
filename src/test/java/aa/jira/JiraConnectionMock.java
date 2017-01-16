@@ -14,7 +14,6 @@ import com.atlassian.jira.rest.client.api.domain.Issue;
 import io.reactivex.Observable;
 import static com.atlassian.util.concurrent.Promises.promise;
 import static java.util.Collections.singletonList;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 public class JiraConnectionMock {
@@ -32,6 +31,7 @@ public class JiraConnectionMock {
 		private final List<ChangelogGroup> changelog = new ArrayList<>();
 		private DateTime creationDate = new DateTime("2016-06-06");
 		private String key = "ANY_KEY";
+		private String jql;
 
 		public IssueMocker withKey(String key) {
 			this.key = key;
@@ -50,6 +50,11 @@ public class JiraConnectionMock {
 			return this;
 		}
 
+		public IssueMocker withJql(String jql) {
+			this.jql = jql;
+			return this;
+		}
+
 		public void mock() {
 			Issue issue = new Issue(null, null, key, 42L,
 				new BasicProject(null, "FOO", 12L, null), null, null, null, null,
@@ -57,7 +62,7 @@ public class JiraConnectionMock {
 				null, null, null, creationDate, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
 				null, changelog, null, null);
 			when(connection.fetchIssue(key)).thenReturn(promise(issue));
-			when(connection.fetchIssues(anyString())).thenReturn(Observable.just(issue));
+			when(connection.fetchIssues(jql)).thenReturn(Observable.just(issue));
 		}
 
 	}
