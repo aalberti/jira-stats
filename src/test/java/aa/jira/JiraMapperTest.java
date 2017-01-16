@@ -75,12 +75,12 @@ public class JiraMapperTest {
 	}
 
 	@Test
-	public void updated_since() throws Exception {
+	public void updated_interval() throws Exception {
 		connectionMock.issue()
 			.withKey("KEY")
-			.withJql("updated >= \"2016-12-12 00:00\"")
+			.withJql("updated >= \"2016-12-12 00:00\" and updated <= \"2016-12-13 00:00\"")
 			.mock();
-		jira.fetchIssues(updatedSince(parisTime("2016-12-12 00:00")))
+		jira.fetchIssues(updatedSince(parisTime("2016-12-12 00:00")).updatedUntil(parisTime("2016-12-13 00:00")))
 			.map(Issue::getKey)
 			.test().await()
 			.assertValue("KEY");

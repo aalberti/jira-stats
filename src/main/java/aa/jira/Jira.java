@@ -52,19 +52,28 @@ public class Jira implements Closeable {
 		return new Filter().updatedSince(since);
 	}
 
-	private static class Filter {
+	public static class Filter {
 		private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter
 			.ofPattern("\"yyyy-MM-dd HH:mm\"")
 			.withZone(ZoneId.of("Europe/Paris"));
 		private Instant updatedSince;
+		private Instant updatedUntil;
 
 		private Filter updatedSince(Instant since) {
 			this.updatedSince = since;
 			return this;
 		}
 
+		public Filter updatedUntil(Instant until) {
+			this.updatedUntil = until;
+			return this;
+		}
+
 		private String toJql() {
-			return "updated >= " + format(updatedSince);
+			String jql = "updated >= " + format(updatedSince);
+			if (updatedUntil != null)
+				jql += " and updated <= " + format(updatedUntil);
+			return jql;
 		}
 
 		private String format(Instant instant) {
