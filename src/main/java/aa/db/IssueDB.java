@@ -15,17 +15,23 @@ import static com.mongodb.client.model.Filters.eq;
 
 public class IssueDB implements Closeable {
 	private final Gson gson;
+	private final String name;
 	private com.mongodb.MongoClient mongoClient;
 	private com.mongodb.client.MongoCollection<Document> collection;
 
 	public IssueDB() {
+		this("jira_stats");
+	}
+
+	public IssueDB(String name) {
 		this.gson = new Gson();
+		this.name = name;
 	}
 
 	public void open() {
 		mongoClient = new com.mongodb.MongoClient();
 		collection = mongoClient
-			.getDatabase("jira_stats")
+			.getDatabase(name)
 			.getCollection("issues");
 	}
 
@@ -35,6 +41,10 @@ public class IssueDB implements Closeable {
 			mongoClient.close();
 		}
 		mongoClient = null;
+	}
+
+	public void drop() {
+		mongoClient.dropDatabase(name);
 	}
 
 	public void save(Issue issue) {
