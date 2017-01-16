@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 import org.bson.Document;
 
 import aa.Issue;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
@@ -31,7 +32,8 @@ public class IssueDB implements Closeable {
 		this("jira_stats");
 	}
 
-	public IssueDB(String name) {
+	@VisibleForTesting
+	IssueDB(String name) {
 		this.gson = new Gson();
 		this.name = name;
 	}
@@ -67,7 +69,6 @@ public class IssueDB implements Closeable {
 			new Document("key", si.issue.getKey())
 				.append("json", si.json),
 			new UpdateOptions().upsert(true));
-		System.out.println("upserted: " + result.getUpsertedId() + ", matched: " + result.getMatchedCount() + ", modified: " + result.getModifiedCount());
 	}
 
 	public void batchDone() {
