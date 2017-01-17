@@ -2,11 +2,13 @@ package aa.sniff;
 
 import java.time.Instant;
 
+import aa.Transition;
 import aa.db.IssueDB;
 import aa.jira.Jira;
 import static aa.jira.Jira.updatedSince;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.DAYS;
+import static java.util.Comparator.naturalOrder;
 
 public class Cicciolina {
 	public static void main(String[] args) throws Exception {
@@ -30,7 +32,10 @@ public class Cicciolina {
 		db.startBatch(until);
 		System.out.println("\n|>>> Batch from " + since.toString() + " to " + until.toString() + " Starting at " + now());
 		jira.fetchIssues(updatedSince(since).updatedUntil(until))
-			.doOnNext(i -> System.out.println("--> Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
+			.doOnNext(
+				i -> System.out.println("--> Fetched " + i.getKey()
+					+ " lead time: " + i.getLeadTime().toString()
+					+ " updated " + i.getHistory().stream().map(Transition::getAt).max(naturalOrder()).toString()))
 			.doOnNext(db::save)
 			.test().await();
 		db.batchDone();
