@@ -15,7 +15,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.result.UpdateResult;
 import io.reactivex.Observable;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.exists;
@@ -69,7 +68,7 @@ public class IssueDB implements Closeable {
 
 	public void save(Issue issue) {
 		SerializedIssue si = new SerializedIssue(issue, gson.toJson(issue));
-		UpdateResult result = issues.replaceOne(
+		issues.replaceOne(
 			eq("key", si.issue.getKey()),
 			new Document("key", si.issue.getKey())
 				.append("json", si.json),
