@@ -27,7 +27,7 @@ public class IssueDB implements Closeable {
 	private MongoClient mongoClient;
 	private MongoCollection<Document> issues;
 	private MongoCollection<Document> globals;
-	private Instant lastUpdateInstant;
+	private Instant nextBatchStart;
 
 	public IssueDB() {
 		this("jira_stats");
@@ -64,7 +64,7 @@ public class IssueDB implements Closeable {
 	}
 
 	public void startBatch(Instant batchEnd) {
-		lastUpdateInstant = batchEnd;
+		nextBatchStart = batchEnd;
 	}
 
 	public void save(Issue issue) {
@@ -79,15 +79,15 @@ public class IssueDB implements Closeable {
 	public void batchDone() {
 		globals.replaceOne(
 			exists("_id"),
-			new Document("lastUpdateInstant", lastUpdateInstant.toString()),
+			new Document("nextBatchStart", nextBatchStart.toString()),
 			new UpdateOptions().upsert(true));
 	}
 
-	public Optional<Instant> getLastUpdateInstant() {
+	public Optional<Instant> getNextBatchStart() {
 		return Optional.ofNullable(globals
 			.find(exists("_id"))
 			.first())
-			.map(doc -> doc.getString("lastUpdateInstant"))
+			.map(doc -> doc.getString("nextBatchStart"))
 			.map(Instant::parse);
 	}
 

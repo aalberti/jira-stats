@@ -25,7 +25,7 @@ public class Cicciolina {
 	}
 
 	private static Instant fetchOnce(Jira jira, IssueDB db) throws InterruptedException {
-		Instant since = db.getLastUpdateInstant().orElse(Instant.parse("2016-01-01T00:00:00Z"));
+		Instant since = db.getNextBatchStart().orElse(Instant.parse("2016-01-01T00:00:00Z"));
 		Instant until = since.plus(1, DAYS);
 		db.startBatch(until);
 		System.out.println("\n|>>> Batch from " + since.toString() + " to " + until.toString() + " Starting at " + now());

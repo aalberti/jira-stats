@@ -8,6 +8,8 @@ import org.junit.Test;
 
 import aa.db.IssueDB;
 import aa.jira.Jira;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import io.reactivex.observables.GroupedObservable;
 import static aa.jira.Jira.updatedSince;
 import static java.time.Instant.now;
@@ -86,7 +88,7 @@ public class TheBigTest {
 				.assertComplete();
 			db.batchDone();
 			System.out.println(">>> Second batch");
-			jira.fetchIssues(updatedSince(db.getLastUpdateInstant().get()))
+			jira.fetchIssues(updatedSince(db.getNextBatchStart().get()))
 				.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
 				.doOnNext(db::save)
 				.test().await()
@@ -102,8 +104,8 @@ public class TheBigTest {
 		db.open();
 		try (Jira ignored = jira;
 			 IssueDB ignored2 = db) {
-			System.out.println("Batch from" + db.getLastUpdateInstant());
-			jira.fetchIssues(updatedSince(db.getLastUpdateInstant().get()))
+			System.out.println("Batch from" + db.getNextBatchStart());
+			jira.fetchIssues(updatedSince(db.getNextBatchStart().get()))
 				.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
 				.doOnNext(db::save)
 				.test().await()
@@ -138,6 +140,19 @@ public class TheBigTest {
 					System.out.println("" + delay.getKey() + ": " + issueKeys.size() + " " + issueKeys.stream().collect(joining(", ", "(", ")")));
 				})
 				.test().await();
+		}
+	}
+
+	@Test
+	public void printOne() throws Exception {
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		IssueDB db = new IssueDB();
+		db.open();
+		try (IssueDB ignored = db) {
+			System.out.println(db.readAll()
+				.filter(i -> "ASC-1650".equals(i.getKey()))
+				.map(gson::toJson)
+				.blockingSingle());
 		}
 	}
 }

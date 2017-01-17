@@ -80,7 +80,7 @@ public class IssueDBTest {
 		db.startBatch();
 		db.batchDone();
 		Instant after = now();
-		assertThat(lastUpdateInstant()).isBetween(before, after);
+		assertThat(nextBatchStart()).isBetween(before, after);
 	}
 
 	@Test
@@ -90,7 +90,7 @@ public class IssueDBTest {
 		sleep(1);
 		Instant before = now();
 		db.startBatch();
-		assertThat(lastUpdateInstant()).isLessThan(before);
+		assertThat(nextBatchStart()).isLessThan(before);
 	}
 
 	@Test
@@ -100,12 +100,12 @@ public class IssueDBTest {
 		Instant before = now();
 		db.startBatch();
 		db.batchDone();
-		assertThat(lastUpdateInstant()).isGreaterThanOrEqualTo(before);
+		assertThat(nextBatchStart()).isGreaterThanOrEqualTo(before);
 	}
 
-	private Instant lastUpdateInstant() throws IOException {
+	private Instant nextBatchStart() throws IOException {
 		try (IssueDB anotherDB = createDB()) {
-			return anotherDB.getLastUpdateInstant().get();
+			return anotherDB.getNextBatchStart().get();
 		}
 	}
 
