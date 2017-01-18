@@ -65,7 +65,7 @@ public class JiraTest {
 	@Test
 	public void assignee() throws Exception {
 		assertThat(defaultIssue.getAssignee())
-			.isEqualTo("Antoine.Alberti@prima-solutions.com");
+			.hasValue("Antoine.Alberti@prima-solutions.com");
 	}
 
 	@Test
@@ -101,7 +101,7 @@ public class JiraTest {
 	@Test
 	public void parent() throws Exception {
 		assertThat(jira.fetchIssue("PRIN-2751").get().getParentKey())
-			.isEqualTo("PRIN-2750");
+			.hasValue("PRIN-2750");
 	}
 
 	@Test

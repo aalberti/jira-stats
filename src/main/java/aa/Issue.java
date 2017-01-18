@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.util.Comparator.comparing;
+import static java.util.Optional.ofNullable;
 
 public class Issue {
 	private final String key;
@@ -58,8 +59,8 @@ public class Issue {
 		return fixVersions;
 	}
 
-	public String getAssignee() {
-		return assignee;
+	public Optional<String> getAssignee() {
+		return ofNullable(assignee);
 	}
 
 	public String getReporter() {
@@ -98,8 +99,8 @@ public class Issue {
 		return sprints;
 	}
 
-	public String getParentKey() {
-		return parentKey;
+	public Optional<String> getParentKey() {
+		return ofNullable(parentKey);
 	}
 
 	public static class Builder {
