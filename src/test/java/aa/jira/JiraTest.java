@@ -105,6 +105,12 @@ public class JiraTest {
 	}
 
 	@Test
+	public void epic() throws Exception {
+		assertThat(jira.fetchIssue("PRIN-3142").get().getParentKey())
+			.hasValue("PRIN-3144");
+	}
+
+	@Test
 	public void lastClosureDate() throws Exception {
 		Issue issueClosedTwice = jira.fetchIssue("PPC-11").get();
 		assertThat(issueClosedTwice.getClosureDate())

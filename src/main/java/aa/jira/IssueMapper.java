@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,6 +28,7 @@ import com.atlassian.jira.rest.client.api.domain.User;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import static aa.Issue.Builder.issue;
 import static aa.Transition.Builder.transition;
+import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 
@@ -76,11 +78,14 @@ class IssueMapper {
 	}
 
 	private Collection<String> extractSprints(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
-		Collection<String> sprints = new ArrayList<>();
-		if (jiraIssue.getFields() == null)
-			return sprints;
+		return extractField(jiraIssue, "Sprint", JSONArray.class)
+			.map(this::toSprintNames)
+			.orElse(emptyList());
+	}
+
+	private Collection<String> toSprintNames(JSONArray jsonSprints) {
 		try {
-			JSONArray jsonSprints = (JSONArray) orNull(jiraIssue.getFieldByName("Sprint"), IssueField::getValue);
+			Collection<String> sprints = new ArrayList<>();
 			for (int i = 0; i < jsonSprints.length(); i++) {
 				String serializedSprint = (String) jsonSprints.get(i);
 				Matcher matcher = SPRINT_PARSER_REGEX.matcher(serializedSprint);
@@ -96,17 +101,25 @@ class IssueMapper {
 	}
 
 	private String extractParent(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+		return extractField(jiraIssue, "Parent", JSONObject.class)
+			.map(p -> {
+				try {
+					return p.getString("key");
+				}
+				catch (JSONException e) {
+					throw new RuntimeException(e);
+				}
+			})
+			.orElseGet(() -> extractField(jiraIssue, "Epic Link", String.class)
+				.orElse(null)
+			);
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> Optional<T> extractField(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, String name, Class<T> ignored) {
 		if (jiraIssue.getFields() == null)
-			return null;
-		JSONObject jsonParent = (JSONObject) orNull(jiraIssue.getFieldByName("Parent"), IssueField::getValue);
-		if (jsonParent == null)
-			return null;
-		try {
-			return jsonParent.getString("key");
-		}
-		catch (JSONException e) {
-			throw new RuntimeException(e);
-		}
+			return Optional.empty();
+		return ofNullable(jiraIssue.getFieldByName(name)).map(IssueField::getValue).map(v -> (T) v);
 	}
 
 	public static <T> Stream<T> stream(Iterable<T> ts) {
