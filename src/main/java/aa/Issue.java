@@ -21,9 +21,10 @@ public class Issue {
 	private final Instant updateDate;
 	private final List<Transition> history;
 	private final Collection<String> sprints;
+	private final String parentKey;
 
 	private Issue(String key, String project, String status, String type, String summary, String reporter, String assignee, Collection<String> fixVersions,
-		Instant creationDate, Instant updateDate, List<Transition> history, Collection<String> sprints) {
+		Instant creationDate, Instant updateDate, List<Transition> history, Collection<String> sprints, String parentKey) {
 		this.key = key;
 		this.project = project;
 		this.status = status;
@@ -36,6 +37,7 @@ public class Issue {
 		this.updateDate = updateDate;
 		this.history = history;
 		this.sprints = sprints;
+		this.parentKey = parentKey;
 	}
 
 	public String getKey() { return key; }
@@ -96,6 +98,10 @@ public class Issue {
 		return sprints;
 	}
 
+	public String getParentKey() {
+		return parentKey;
+	}
+
 	public static class Builder {
 		private String key;
 		private String project;
@@ -109,6 +115,7 @@ public class Issue {
 		private Instant updateDate;
 		private List<Transition> history;
 		private Collection<String> sprints;
+		private String parentKey;
 
 		private Builder() {}
 
@@ -174,8 +181,13 @@ public class Issue {
 			return this;
 		}
 
+		public Builder withParentKey(String parentKey) {
+			this.parentKey = parentKey;
+			return this;
+		}
+
 		public Issue build() {
-			return new Issue(key, project, status, type, summary, reporter, assignee, fixVersions, creationDate, updateDate, history, sprints);
+			return new Issue(key, project, status, type, summary, reporter, assignee, fixVersions, creationDate, updateDate, history, sprints, parentKey);
 		}
 	}
 }

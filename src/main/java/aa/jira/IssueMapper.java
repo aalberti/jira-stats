@@ -12,6 +12,7 @@ import java.util.stream.StreamSupport;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.joda.time.DateTime;
 
 import aa.Issue;
@@ -49,6 +50,7 @@ class IssueMapper {
 			.withFixVersions(stream(jiraIssue.getFixVersions()).map(Version::getName).collect(toList()))
 			.withHistory(history)
 			.withSprints(extractSprints(jiraIssue))
+			.withParentKey(extractParent(jiraIssue))
 			.build();
 	}
 
@@ -87,6 +89,20 @@ class IssueMapper {
 				sprints.add(matcher.group("name"));
 			}
 			return sprints;
+		}
+		catch (JSONException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private String extractParent(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+		if (jiraIssue.getFields() == null)
+			return null;
+		JSONObject jsonParent = (JSONObject) orNull(jiraIssue.getFieldByName("Parent"), IssueField::getValue);
+		if (jsonParent == null)
+			return null;
+		try {
+			return jsonParent.getString("key");
 		}
 		catch (JSONException e) {
 			throw new RuntimeException(e);

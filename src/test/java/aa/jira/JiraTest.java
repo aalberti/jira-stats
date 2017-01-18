@@ -99,6 +99,12 @@ public class JiraTest {
 	}
 
 	@Test
+	public void parent() throws Exception {
+		assertThat(jira.fetchIssue("PRIN-2751").get().getParentKey())
+			.isEqualTo("PRIN-2750");
+	}
+
+	@Test
 	public void lastClosureDate() throws Exception {
 		Issue issueClosedTwice = jira.fetchIssue("PPC-11").get();
 		assertThat(issueClosedTwice.getClosureDate())
