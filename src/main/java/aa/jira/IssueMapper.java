@@ -1,11 +1,17 @@
 package aa.jira;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
 import org.joda.time.DateTime;
 
 import aa.Issue;
@@ -13,6 +19,7 @@ import aa.Transition;
 import com.atlassian.jira.rest.client.api.domain.BasicProject;
 import com.atlassian.jira.rest.client.api.domain.ChangelogGroup;
 import com.atlassian.jira.rest.client.api.domain.ChangelogItem;
+import com.atlassian.jira.rest.client.api.domain.IssueField;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.jira.rest.client.api.domain.Status;
 import com.atlassian.jira.rest.client.api.domain.User;
@@ -23,6 +30,8 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 
 class IssueMapper {
+	private static final Pattern SPRINT_PARSER_REGEX = Pattern.compile(".*name=(?<name>[^,\\]]*).*");
+
 	Issue toIssue(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
 		List<Transition> history = stream(jiraIssue.getChangelog())
 			.flatMap(this::toHistory)
@@ -39,6 +48,7 @@ class IssueMapper {
 			.withUpdateDate(toInstant(jiraIssue.getUpdateDate()))
 			.withFixVersions(stream(jiraIssue.getFixVersions()).map(Version::getName).collect(toList()))
 			.withHistory(history)
+			.withSprints(extractSprints(jiraIssue))
 			.build();
 	}
 
@@ -61,6 +71,26 @@ class IssueMapper {
 			.withField(i.getField())
 			.withTarget(i.getToString())
 			.build();
+	}
+
+	private Collection<String> extractSprints(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+		Collection<String> sprints = new ArrayList<>();
+		if (jiraIssue.getFields() == null)
+			return sprints;
+		try {
+			JSONArray jsonSprints = (JSONArray) orNull(jiraIssue.getFieldByName("Sprint"), IssueField::getValue);
+			for (int i = 0; i < jsonSprints.length(); i++) {
+				String serializedSprint = (String) jsonSprints.get(i);
+				Matcher matcher = SPRINT_PARSER_REGEX.matcher(serializedSprint);
+				if (!matcher.find())
+					throw new RuntimeException("Can't parse sprint " + serializedSprint);
+				sprints.add(matcher.group("name"));
+			}
+			return sprints;
+		}
+		catch (JSONException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public static <T> Stream<T> stream(Iterable<T> ts) {

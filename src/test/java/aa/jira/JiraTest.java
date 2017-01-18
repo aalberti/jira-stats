@@ -73,6 +73,7 @@ public class JiraTest {
 		assertThat(defaultIssue.getReporter())
 			.isEqualTo("Antoine.Alberti@prima-solutions.com");
 	}
+
 	@Test
 	public void summary() throws Exception {
 		assertThat(defaultIssue.getSummary())
@@ -89,6 +90,12 @@ public class JiraTest {
 	public void updateDate() throws Exception {
 		assertThat(defaultIssue.getUpdateDate())
 			.isEqualTo(Instant.parse("2017-01-18T13:13:41Z"));
+	}
+
+	@Test
+	public void sprints() throws Exception {
+		assertThat(defaultIssue.getSprints())
+			.containsExactly("v820.0", "v820.1");
 	}
 
 	@Test

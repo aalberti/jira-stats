@@ -20,9 +20,10 @@ public class Issue {
 	private final Instant creationDate;
 	private final Instant updateDate;
 	private final List<Transition> history;
+	private final Collection<String> sprints;
 
 	private Issue(String key, String project, String status, String type, String summary, String reporter, String assignee, Collection<String> fixVersions,
-		Instant creationDate, Instant updateDate, List<Transition> history) {
+		Instant creationDate, Instant updateDate, List<Transition> history, Collection<String> sprints) {
 		this.key = key;
 		this.project = project;
 		this.status = status;
@@ -34,6 +35,7 @@ public class Issue {
 		this.creationDate = creationDate;
 		this.updateDate = updateDate;
 		this.history = history;
+		this.sprints = sprints;
 	}
 
 	public String getKey() { return key; }
@@ -90,6 +92,10 @@ public class Issue {
 			.map(Transition::getAt);
 	}
 
+	public Collection<String> getSprints() {
+		return sprints;
+	}
+
 	public static class Builder {
 		private String key;
 		private String project;
@@ -102,6 +108,7 @@ public class Issue {
 		private Instant creationDate;
 		private Instant updateDate;
 		private List<Transition> history;
+		private Collection<String> sprints;
 
 		private Builder() {}
 
@@ -162,8 +169,13 @@ public class Issue {
 			return this;
 		}
 
+		public Builder withSprints(Collection<String> sprints) {
+			this.sprints = sprints;
+			return this;
+		}
+
 		public Issue build() {
-			return new Issue(key, project, status, type, summary, reporter, assignee, fixVersions, creationDate, updateDate, history);
+			return new Issue(key, project, status, type, summary, reporter, assignee, fixVersions, creationDate, updateDate, history, sprints);
 		}
 	}
 }
