@@ -28,9 +28,9 @@ public class Cicciolina {
 
 	private static Instant fetchOnce(Jira jira, IssueDB db) throws InterruptedException {
 		Instant since = db.getNextBatchStart().orElse(Instant.parse("2016-01-01T00:00:00Z"));
-		Instant until = since.plus(1, DAYS);
+		Instant until = since.plus(30, DAYS);
 		db.startBatch(until);
-		System.out.println("\nBatch from " + since.toString() + " to " + until.toString() + " Starting at " + now());
+		System.out.println("\nBatch from " + since.toString() + " to " + until.toString() + " starting at " + now());
 		jira.fetchIssues(updatedSince(since).updatedUntil(until))
 			.doOnNext(
 				i -> System.out.println("  - Fetched " + i.getKey()
@@ -39,7 +39,7 @@ public class Cicciolina {
 			.doOnNext(db::save)
 			.test().await();
 		db.batchDone();
-		System.out.println("Batch done at " + now());
+		System.out.println("Batch from " + since.toString() + " to " + until.toString() + " done at " + now());
 		return until;
 	}
 }
