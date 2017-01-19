@@ -61,23 +61,11 @@ public class IssueDBTest {
 			.assertValueCount(0);
 	}
 
-	private Issue issueClosingAt(Instant closureDate) {
-		return issue()
-			.withKey("KEY")
-			.withHistory(
-				singletonList(transition()
-					.withAt(closureDate)
-					.withField("status")
-					.withTarget("Closed")
-					.build()
-				)
-			).build();
-	}
-
 	@Test
 	public void updateInstant() throws Exception {
 		Instant before = now();
 		db.startBatch();
+		db.save(anyIssue());
 		db.batchDone();
 		Instant after = now();
 		assertThat(nextBatchStart()).isBetween(before, after);
@@ -86,11 +74,24 @@ public class IssueDBTest {
 	@Test
 	public void updateInstant_notUpdated_when_batchNotDone() throws Exception {
 		db.startBatch();
+		db.save(anyIssue());
 		db.batchDone();
 		sleep(1);
-		Instant before = now();
+		Instant after = now();
 		db.startBatch();
-		assertThat(nextBatchStart()).isLessThan(before);
+		assertThat(nextBatchStart()).isLessThan(after);
+	}
+
+	@Test
+	public void updateInstant_notUpdated_when_noSave() throws Exception {
+		db.startBatch();
+		db.save(anyIssue());
+		db.batchDone();
+		sleep(1);
+		Instant after = now();
+		db.startBatch();
+		db.batchDone();
+		assertThat(nextBatchStart()).isLessThan(after);
 	}
 
 	@Test
@@ -99,6 +100,7 @@ public class IssueDBTest {
 		sleep(1);
 		Instant before = now();
 		db.startBatch();
+		db.save(anyIssue());
 		db.batchDone();
 		assertThat(nextBatchStart()).isGreaterThanOrEqualTo(before);
 	}
@@ -113,5 +115,22 @@ public class IssueDBTest {
 		IssueDB db = new IssueDB("IssueDBTest");
 		db.open();
 		return db;
+	}
+
+	private Issue anyIssue() {
+		return issueClosingAt(now());
+	}
+
+	private Issue issueClosingAt(Instant closureDate) {
+		return issue()
+			.withKey("KEY")
+			.withHistory(
+				singletonList(transition()
+					.withAt(closureDate)
+					.withField("status")
+					.withTarget("Closed")
+					.build()
+				)
+			).build();
 	}
 }
