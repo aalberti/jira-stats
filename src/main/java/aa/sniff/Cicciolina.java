@@ -1,5 +1,7 @@
 package aa.sniff;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 
@@ -11,25 +13,35 @@ import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.util.Comparator.naturalOrder;
 
-public class Cicciolina {
+public class Cicciolina implements Closeable {
+	private Jira jira;
+	private IssueDB db;
+
 	public static void main(String[] args) throws Exception {
-		Instant start = now();
-		Jira jira = new Jira();
-		jira.open();
-		IssueDB db = new IssueDB();
-		db.open();
-		try (Jira ignored = jira;
-			 IssueDB ignored2 = db) {
-			Instant until;
-			do {
-				until = fetchOnce(jira, db);
-			}
-			while (until.isBefore(now()));
+		Cicciolina cicciolina = new Cicciolina();
+		cicciolina.init();
+		try (Cicciolina ignored = cicciolina) {
+			cicciolina.fetchAll();
 		}
+	}
+
+	private void init() {
+		jira = new Jira();
+		jira.open();
+		db = new IssueDB();
+		db.open();
+	}
+
+	private void fetchAll() throws IOException, InterruptedException {
+		Instant start = now();
+		Instant until;
+		do {
+			until = fetchOnce(jira, db);
+		} while (until.isBefore(now()));
 		System.out.println("=> All done in " + Duration.between(start, now()).toString());
 	}
 
-	private static Instant fetchOnce(Jira jira, IssueDB db) throws InterruptedException {
+	private Instant fetchOnce(Jira jira, IssueDB db) throws InterruptedException {
 		Instant since = db.getNextBatchStart().orElse(Instant.parse("2016-01-01T00:00:00Z"));
 		Instant until = since.plus(30, DAYS);
 		db.startBatch(until);
@@ -45,5 +57,11 @@ public class Cicciolina {
 		System.out.println("Batch from " + since.toString() + " to " + until.toString() + " done at " + now());
 		System.out.println();
 		return until;
+	}
+
+	@Override
+	public void close() throws IOException {
+		jira.close();
+		db.close();
 	}
 }
