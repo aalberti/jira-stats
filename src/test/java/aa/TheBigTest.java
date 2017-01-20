@@ -2,7 +2,6 @@ package aa;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +16,7 @@ import static aa.jira.Jira.updatedSince;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.util.Comparator.comparing;
+import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -154,18 +154,14 @@ public class TheBigTest {
 		try (IssueDB ignored = db) {
 			db.readAll()
 				.filter(i -> "PRIN".equals(i.getProject()))
-				.filter(i -> firstSprintAssignment(i).isPresent())
-				.filter(i -> !wasOriginallyAssignedToSprint(i))
+				.filter(i -> "PRIN-3000".compareTo(i.getKey()) < 0)
+				.filter(i -> firstSprintAssignment(i)
+					.map(sprintTime -> !sprintTime.equals(i.getCreationDate()))
+					.orElse(false))
 				.doOnNext(i -> System.out.println(i.getKey()
 					+ " sprint assignment delay " + Duration.between(i.getCreationDate(), firstSprintAssignment(i).get()).toString()))
 				.test().await();
 		}
-	}
-
-	private boolean wasOriginallyAssignedToSprint(Issue issue) {
-		return firstSprintAssignment(issue)
-			.map(sprintTime -> sprintTime.equals(issue.getCreationDate()))
-			.orElse(false);
 	}
 
 	private Optional<Instant> firstSprintAssignment(Issue issue) {
@@ -173,7 +169,7 @@ public class TheBigTest {
 			.filter(t -> "Sprint".equals(t.getField()))
 			.filter(t -> !t.getSource().isPresent())
 			.map(Transition::getAt)
-			.sorted(Comparator.reverseOrder())
+			.sorted(reverseOrder())
 			.findFirst();
 	}
 
@@ -184,9 +180,14 @@ public class TheBigTest {
 		db.open();
 		try (IssueDB ignored = db) {
 			System.out.println(db.readAll()
-				.filter(i -> "PRIN-3046".equals(i.getKey()))
+				.filter(i -> "PRIN-2000".equals(i.getKey()))
 				.map(gson::toJson)
 				.blockingSingle());
 		}
+	}
+
+	@Test
+	public void secondsToInstant() throws Exception {
+		System.out.println(Instant.ofEpochSecond(1464090827).toString());
 	}
 }
