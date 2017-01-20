@@ -133,6 +133,7 @@ public class TheBigTest {
 		db.open();
 		try (IssueDB ignored = db) {
 			db.readAll()
+				.filter(i -> "PRIN".equals(i.getProject()))
 				.filter(i -> i.getLeadTime().isPresent())
 				.groupBy(i -> i.getLeadTime().get().toDays())
 				.sorted(comparing(GroupedObservable::getKey))
