@@ -1,6 +1,7 @@
 package aa;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,13 +81,13 @@ public class TheBigTest {
 		try (Jira ignored = jira;
 			 IssueDB ignored2 = db) {
 			System.out.println(">>> First batch");
-			db.startBatch();
-			jira.fetchIssues(updatedSince(now().minus(20, MINUTES)))
+			Instant since = now().minus(20, MINUTES);
+			jira.fetchIssues(updatedSince(since))
 				.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))
 				.doOnNext(db::save)
 				.test().await()
 				.assertComplete();
-			db.batchDone();
+			db.saveNextBatchStart(since);
 			System.out.println(">>> Second batch");
 			jira.fetchIssues(updatedSince(db.getNextBatchStart().get()))
 				.doOnNext(i -> System.out.println("Fetched " + i.getKey() + " lead time: " + i.getLeadTime().toString()))

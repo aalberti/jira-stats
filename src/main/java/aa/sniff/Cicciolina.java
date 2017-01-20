@@ -44,7 +44,6 @@ public class Cicciolina implements Closeable {
 	private Instant fetchOnce(Jira jira, IssueDB db) throws InterruptedException {
 		Instant since = db.getNextBatchStart().orElse(Instant.parse("2016-01-01T00:00:00Z"));
 		Instant until = since.plus(30, DAYS);
-		db.startBatch(until);
 		System.out.println("Batch from " + since.toString() + " to " + until.toString() + " starting at " + now());
 		jira.fetchIssues(updatedSince(since).updatedUntil(until))
 			.doOnNext(
@@ -53,7 +52,8 @@ public class Cicciolina implements Closeable {
 					+ " updated " + i.getHistory().stream().map(Transition::getAt).max(naturalOrder()).toString()))
 			.doOnNext(db::save)
 			.test().await();
-		db.batchDone();
+		if (until.isBefore(now()))
+			db.saveNextBatchStart(until);
 		System.out.println("Batch from " + since.toString() + " to " + until.toString() + " done at " + now());
 		System.out.println();
 		return until;

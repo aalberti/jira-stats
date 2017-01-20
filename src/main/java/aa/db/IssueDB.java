@@ -18,7 +18,6 @@ import com.mongodb.client.model.UpdateOptions;
 import io.reactivex.Observable;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.exists;
-import static java.time.Instant.now;
 
 public class IssueDB implements Closeable {
 	private final Gson gson;
@@ -26,8 +25,6 @@ public class IssueDB implements Closeable {
 	private MongoClient mongoClient;
 	private MongoCollection<Document> issues;
 	private MongoCollection<Document> globals;
-	private Instant nextBatchStart;
-	private boolean savedIssue = false;
 
 	public IssueDB() {
 		this("jira_stats");
@@ -60,14 +57,6 @@ public class IssueDB implements Closeable {
 		mongoClient.dropDatabase(name);
 	}
 
-	public void startBatch() {
-		startBatch(now());
-	}
-
-	public void startBatch(Instant batchEnd) {
-		nextBatchStart = batchEnd;
-	}
-
 	public void save(Issue issue) {
 		SerializedIssue si = new SerializedIssue(issue, gson.toJson(issue));
 		issues.replaceOne(
@@ -75,17 +64,13 @@ public class IssueDB implements Closeable {
 			new Document("key", si.issue.getKey())
 				.append("json", si.json),
 			new UpdateOptions().upsert(true));
-		savedIssue = true;
 	}
 
-	public void batchDone() {
-		if (!savedIssue)
-			return;
+	public void saveNextBatchStart(Instant nextBatchStart) {
 		globals.replaceOne(
 			exists("_id"),
 			new Document("nextBatchStart", nextBatchStart.toString()),
 			new UpdateOptions().upsert(true));
-		savedIssue = false;
 	}
 
 	public Optional<Instant> getNextBatchStart() {
