@@ -55,7 +55,8 @@ public class IssueDB implements Closeable {
 		mongoClient = null;
 	}
 
-	public void drop() {
+	@VisibleForTesting
+	void drop() {
 		mongoClient.dropDatabase(name);
 	}
 
