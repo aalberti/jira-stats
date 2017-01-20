@@ -10,8 +10,8 @@ import aa.Issue;
 import static aa.Issue.Builder.issue;
 import static aa.Transition.Builder.transition;
 import static java.time.Instant.now;
+import static java.time.temporal.ChronoUnit.DAYS;
 import static java.time.temporal.ChronoUnit.HOURS;
-import static java.time.temporal.ChronoUnit.MONTHS;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -62,7 +62,7 @@ public class IssueDBTest {
 
 	@Test
 	public void nextBatchStart_saved() throws Exception {
-		Instant requestedNextBatchStart = now().minus(1, MONTHS);
+		Instant requestedNextBatchStart = now().minus(1, DAYS);
 		db.saveNextBatchStart(requestedNextBatchStart);
 
 		Instant savedNextBatchStart;

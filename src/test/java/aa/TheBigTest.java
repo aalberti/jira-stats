@@ -2,6 +2,7 @@ package aa;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -139,10 +140,41 @@ public class TheBigTest {
 				.sorted(comparing(GroupedObservable::getKey))
 				.doOnNext(delay -> {
 					List<String> issueKeys = delay.map(Issue::getKey).toList().blockingGet();
-					System.out.println("" + delay.getKey() + ": " + issueKeys.size() + " " + issueKeys.stream().collect(joining(", ", "(", ")")));
+					System.out.println("" + delay.getKey() + ": " + issueKeys.size() + " "
+						+ issueKeys.stream().collect(joining(", ", "(", ")")));
 				})
 				.test().await();
 		}
+	}
+
+	@Test
+	public void issues_not_originally_assigned_to_sprint() throws Exception {
+		IssueDB db = new IssueDB();
+		db.open();
+		try (IssueDB ignored = db) {
+			db.readAll()
+				.filter(i -> "PRIN".equals(i.getProject()))
+				.filter(i -> firstSprintAssignment(i).isPresent())
+				.filter(i -> !wasOriginallyAssignedToSprint(i))
+				.doOnNext(i -> System.out.println(i.getKey()
+					+ " sprint assignment delay " + Duration.between(i.getCreationDate(), firstSprintAssignment(i).get()).toString()))
+				.test().await();
+		}
+	}
+
+	private boolean wasOriginallyAssignedToSprint(Issue issue) {
+		return firstSprintAssignment(issue)
+			.map(sprintTime -> sprintTime.equals(issue.getCreationDate()))
+			.orElse(false);
+	}
+
+	private Optional<Instant> firstSprintAssignment(Issue issue) {
+		return issue.getHistory().stream()
+			.filter(t -> "Sprint".equals(t.getField()))
+			.filter(t -> !t.getSource().isPresent())
+			.map(Transition::getAt)
+			.sorted(Comparator.reverseOrder())
+			.findFirst();
 	}
 
 	@Test
@@ -152,7 +184,7 @@ public class TheBigTest {
 		db.open();
 		try (IssueDB ignored = db) {
 			System.out.println(db.readAll()
-				.filter(i -> "ASC-1650".equals(i.getKey()))
+				.filter(i -> "PRIN-3046".equals(i.getKey()))
 				.map(gson::toJson)
 				.blockingSingle());
 		}

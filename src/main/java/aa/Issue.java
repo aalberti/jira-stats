@@ -89,7 +89,7 @@ public class Issue {
 	public Optional<Instant> getClosureDate() {
 		return history.stream()
 			.filter(t -> "status".equals(t.getField()))
-			.filter(t -> "Closed".equals(t.getTo()))
+			.filter(t -> t.getTarget().isPresent() && "Closed".equals(t.getTarget().get()))
 			.sorted(comparing(Transition::getAt).reversed())
 			.findFirst()
 			.map(Transition::getAt);

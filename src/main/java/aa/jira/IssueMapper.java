@@ -73,6 +73,7 @@ class IssueMapper {
 		return transition()
 			.withAt(toInstant(changelogGroup.getCreated()))
 			.withField(i.getField())
+			.withSource(i.getFromString())
 			.withTarget(i.getToString())
 			.build();
 	}

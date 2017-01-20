@@ -1,16 +1,21 @@
 package aa;
 
 import java.time.Instant;
+import java.util.Optional;
+
+import static java.util.Optional.ofNullable;
 
 public class Transition {
 	private Instant at;
 	private String field;
-	private String to;
+	private String source;
+	private String target;
 
-	Transition(Instant at, String field, String to) {
+	Transition(Instant at, String field, String source, String target) {
 		this.at = at;
 		this.field = field;
-		this.to = to;
+		this.source = source;
+		this.target = target;
 	}
 
 	public Instant getAt() {
@@ -21,13 +26,18 @@ public class Transition {
 		return field;
 	}
 
-	public String getTo() {
-		return to;
+	public Optional<String> getSource() {
+		return ofNullable(source);
+	}
+
+	public Optional<String> getTarget() {
+		return ofNullable(target);
 	}
 
 	public static class Builder {
 		private Instant at;
 		private String field;
+		private String from;
 		private String to;
 
 		private Builder() {}
@@ -44,13 +54,18 @@ public class Transition {
 			return this;
 		}
 
+		public Builder withSource(String from) {
+			this.from = from;
+			return this;
+		}
+
 		public Builder withTarget(String to) {
 			this.to = to;
 			return this;
 		}
 
 		public Transition build() {
-			return new Transition(at, field, to);
+			return new Transition(at, field, from, to);
 		}
 	}
 }
