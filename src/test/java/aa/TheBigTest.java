@@ -129,7 +129,7 @@ public class TheBigTest {
 	}
 
 	@Test
-	public void distribute_the_big_stuff() throws Exception {
+	public void distribute_leadTime() throws Exception {
 		IssueDB db = new IssueDB();
 		db.open();
 		try (IssueDB ignored = db) {
@@ -137,6 +137,25 @@ public class TheBigTest {
 				.filter(i -> "PRIN".equals(i.getProject()))
 				.filter(i -> i.getLeadTime().isPresent())
 				.groupBy(i -> i.getLeadTime().get().toDays())
+				.sorted(comparing(GroupedObservable::getKey))
+				.doOnNext(delay -> {
+					List<String> issueKeys = delay.map(Issue::getKey).toList().blockingGet();
+					System.out.println("" + delay.getKey() + ": " + issueKeys.size() + " "
+						+ issueKeys.stream().collect(joining(", ", "(", ")")));
+				})
+				.test().await();
+		}
+	}
+
+	@Test
+	public void distribute_devTime() throws Exception {
+		IssueDB db = new IssueDB();
+		db.open();
+		try (IssueDB ignored = db) {
+			db.readAll()
+				.filter(i -> "PRIN".equals(i.getProject()))
+				.filter(i -> i.getDevTime().isPresent())
+				.groupBy(i -> i.getDevTime().get().toDays())
 				.sorted(comparing(GroupedObservable::getKey))
 				.doOnNext(delay -> {
 					List<String> issueKeys = delay.map(Issue::getKey).toList().blockingGet();
