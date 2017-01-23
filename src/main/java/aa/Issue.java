@@ -6,7 +6,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import static java.util.Comparator.comparing;
+import static java.util.Comparator.naturalOrder;
+import static java.util.Comparator.reverseOrder;
 import static java.util.Optional.ofNullable;
 
 public class Issue {
@@ -90,9 +91,9 @@ public class Issue {
 		return history.stream()
 			.filter(t -> "status".equals(t.getField()))
 			.filter(t -> t.getTarget().isPresent() && "Closed".equals(t.getTarget().get()))
-			.sorted(comparing(Transition::getAt).reversed())
-			.findFirst()
-			.map(Transition::getAt);
+			.map(Transition::getAt)
+			.sorted(reverseOrder())
+			.findFirst();
 	}
 
 	public Collection<String> getSprints() {
@@ -101,6 +102,20 @@ public class Issue {
 
 	public Optional<String> getParentKey() {
 		return ofNullable(parentKey);
+	}
+
+	public Optional<Duration> getDevTime() {
+		return getClosureDate()
+			.flatMap(c -> firstSprintAssignment().map(s -> Duration.between(s, c)));
+	}
+
+	private Optional<Instant> firstSprintAssignment() {
+		return history.stream()
+			.filter(t -> "Sprint".equals(t.getField()))
+			.filter(t -> !t.getSource().isPresent())
+			.map(Transition::getAt)
+			.sorted(naturalOrder())
+			.findFirst();
 	}
 
 	public static class Builder {

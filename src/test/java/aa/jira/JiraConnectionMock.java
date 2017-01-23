@@ -44,10 +44,24 @@ public class JiraConnectionMock {
 		}
 
 		public IssueMocker withClosureAtDate(DateTime date) {
-			ChangelogItem changelogItem = new ChangelogItem(null, "status", null, null, null, "Closed");
+			transition(date, "status", "Closed");
+			return this;
+		}
+
+		public IssueMocker withSprintAssignmentAtDate(DateTime date) {
+			transition(date, "Sprint", "sprint");
+			return this;
+		}
+
+		public IssueMocker withSprintResetAtDate(DateTime date) {
+			transition(date, "Sprint", null);
+			return this;
+		}
+
+		private void transition(DateTime date, String field, String target) {
+			ChangelogItem changelogItem = new ChangelogItem(null, field, null, null, null, target);
 			changelog.add(new ChangelogGroup(new BasicUser(null, "jdoe", "Jane Doe"), date,
 				singletonList(changelogItem)));
-			return this;
 		}
 
 		public IssueMocker withJql(String jql) {
@@ -64,6 +78,5 @@ public class JiraConnectionMock {
 			when(connection.fetchIssue(key)).thenReturn(promise(issue));
 			when(connection.fetchIssues(jql)).thenReturn(Observable.just(issue));
 		}
-
 	}
 }

@@ -31,10 +31,11 @@ public class JiraMapperTest {
 
 	@Test
 	public void lastClosureDate() throws Exception {
+		DateTime lastDate = new DateTime("2016-12-12T00:00:00Z");
 		connectionMock.issue()
 			.withKey("FOO-42")
-			.withClosureAtDate(new DateTime("2016-11-11T00:00:00Z"))
-			.withClosureAtDate(new DateTime("2016-12-12T00:00:00Z"))
+			.withClosureAtDate(lastDate.minusDays(1))
+			.withClosureAtDate(lastDate)
 			.mock();
 		Issue issueClosedTwice = jira.fetchIssue("FOO-42").get();
 		assertThat(issueClosedTwice.getClosureDate())
@@ -53,10 +54,11 @@ public class JiraMapperTest {
 
 	@Test
 	public void leadTime() throws Exception {
+		DateTime creationDate = new DateTime("2016-12-12T00:00:00Z");
 		connectionMock.issue()
 			.withKey("FOO-42")
-			.withCreationDate(new DateTime("2016-12-12T00:00:00Z"))
-			.withClosureAtDate(new DateTime("2016-12-13T00:00:00Z"))
+			.withCreationDate(creationDate)
+			.withClosureAtDate(creationDate.plusHours(24))
 			.mock();
 		Issue issueClosedTwice = jira.fetchIssue("FOO-42").get();
 		assertThat(issueClosedTwice.getLeadTime())
@@ -84,6 +86,62 @@ public class JiraMapperTest {
 			.map(Issue::getKey)
 			.test().await()
 			.assertValue("KEY");
+	}
+
+	@Test
+	public void devTime() throws Exception {
+		DateTime creationDate = new DateTime("2016-12-12T00:00:00Z");
+		connectionMock.issue()
+			.withKey("KEY")
+			.withCreationDate(creationDate)
+			.withSprintAssignmentAtDate(creationDate.plusHours(24))
+			.withClosureAtDate(creationDate.plusHours(48))
+			.mock();
+		Issue issue = jira.fetchIssue("KEY").get();
+		assertThat(issue.getDevTime())
+			.hasValueSatisfying(t -> assertThat(t.toString()).isEqualTo("PT24H"));
+	}
+
+	@Test
+	public void devTime_when_severalOriginalSprintAssignments() throws Exception {
+		DateTime creationDate = new DateTime("2016-12-12T00:00:00Z");
+		connectionMock.issue()
+			.withKey("KEY")
+			.withCreationDate(creationDate)
+			.withSprintAssignmentAtDate(creationDate.plusHours(24))
+			.withSprintResetAtDate(creationDate.plusHours(48))
+			.withSprintAssignmentAtDate(creationDate.plusHours(72))
+			.withClosureAtDate(creationDate.plusHours(96))
+			.mock();
+		Issue issue = jira.fetchIssue("KEY").get();
+		assertThat(issue.getDevTime())
+			.hasValueSatisfying(t -> assertThat(t.toString()).isEqualTo("PT72H"));
+	}
+
+	@Test
+	public void devTime_empty_when_notClosed() throws Exception {
+		DateTime creationDate = new DateTime("2016-12-12T00:00:00Z");
+		connectionMock.issue()
+			.withKey("KEY")
+			.withCreationDate(creationDate)
+			.withSprintAssignmentAtDate(creationDate.plusHours(24))
+			.mock();
+		Issue issue = jira.fetchIssue("KEY").get();
+		assertThat(issue.getDevTime())
+			.isEmpty();
+	}
+
+	@Test
+	public void devTime_empty_when_neverAssignedToSprint() throws Exception {
+		DateTime creationDate = new DateTime("2016-12-12T00:00:00Z");
+		connectionMock.issue()
+			.withKey("KEY")
+			.withCreationDate(creationDate)
+			.withClosureAtDate(creationDate.plusHours(24))
+			.mock();
+		Issue issue = jira.fetchIssue("KEY").get();
+		assertThat(issue.getDevTime())
+			.isEmpty();
 	}
 
 	private Instant parisTime(String time) {
