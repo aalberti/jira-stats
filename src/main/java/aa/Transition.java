@@ -37,8 +37,8 @@ public class Transition {
 	public static class Builder {
 		private Instant at;
 		private String field;
-		private String from;
-		private String to;
+		private String source;
+		private String target;
 
 		private Builder() {}
 
@@ -54,18 +54,18 @@ public class Transition {
 			return this;
 		}
 
-		public Builder withSource(String from) {
-			this.from = from;
+		public Builder withSource(String source) {
+			this.source = source;
 			return this;
 		}
 
-		public Builder withTarget(String to) {
-			this.to = to;
+		public Builder withTarget(String target) {
+			this.target = target;
 			return this;
 		}
 
 		public Transition build() {
-			return new Transition(at, field, from, to);
+			return new Transition(at, field, source, target);
 		}
 	}
 }
