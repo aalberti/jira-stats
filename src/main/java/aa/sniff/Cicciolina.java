@@ -57,6 +57,8 @@ public class Cicciolina implements Closeable {
 			.test().await();
 		if (until.isBefore(now()))
 			db.saveNextBatchStart(until);
+		else
+			db.saveNextBatchStart(now().minus(1, DAYS));
 		System.out.println("Batch from " + since.toString() + " to " + until.toString() + " done at " + now());
 		System.out.println();
 		return until;
