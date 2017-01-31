@@ -1,15 +1,11 @@
 package aa.jira;
 
 import java.io.Closeable;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
-import java.util.Base64;
 import java.util.EnumSet;
 import java.util.HashSet;
-import java.util.Properties;
 
 import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
@@ -21,14 +17,16 @@ import com.atlassian.util.concurrent.Promise;
 import io.reactivex.Observable;
 import static java.util.Arrays.asList;
 
-class JiraConnection implements Closeable{
+class JiraConnection implements Closeable {
 	private static final HashSet<String> FIELDS = new HashSet<>(asList("summary", "issuetype", "created", "updated", "project", "status"));
 	private JiraRestClient jiraRestClient;
 
 	void open() {
 		try {
 			URI uri = new URI("https://applications.prima-solutions.com/jira/");
-			jiraRestClient = new AsynchronousJiraRestClientFactory().create(uri, authentication());
+			Authentication authentication = Authentication.load();
+			BasicHttpAuthenticationHandler httpAuthentication = new BasicHttpAuthenticationHandler(authentication.getUser(), authentication.getPassword());
+			jiraRestClient = new AsynchronousJiraRestClientFactory().create(uri, httpAuthentication);
 		}
 		catch (URISyntaxException e) {
 			e.printStackTrace();
@@ -38,24 +36,6 @@ class JiraConnection implements Closeable{
 	@Override
 	public void close() throws IOException {
 		jiraRestClient.close();
-	}
-
-	private BasicHttpAuthenticationHandler authentication() {
-		Properties properties = loadProperties();
-		String user = (String) properties.get("user");
-		String password = (String) properties.get("password");
-		return new BasicHttpAuthenticationHandler(user, new String(Base64.getDecoder().decode(password)));
-	}
-
-	private Properties loadProperties() {
-		try {
-			Properties properties = new Properties();
-			properties.load(new FileInputStream(Paths.get(System.getProperty("user.home"), ".jira").toFile()));
-			return properties;
-		}
-		catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	Promise<Issue> fetchIssue(String issueKey) {
