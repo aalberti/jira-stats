@@ -15,9 +15,9 @@ class WorkLogs {
             out.println header
             worklogs
                     .groupBy { it.date }
-                    .collect {([it.key[0]] + flattenLogByType(it.value[0], types)) }
+                    .collect { ([it.key[0]] + flattenLogByType(it.value[0], types)) }
                     .collect { it.join(',') }
-            .forEach { out.println it }
+                    .forEach { out.println it }
         }
     }
 

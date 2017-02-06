@@ -46,9 +46,8 @@ public class IssueDB implements Closeable {
 
 	@Override
 	public void close() throws IOException {
-		if (mongoClient != null) {
+		if (mongoClient != null)
 			mongoClient.close();
-		}
 		mongoClient = null;
 	}
 
