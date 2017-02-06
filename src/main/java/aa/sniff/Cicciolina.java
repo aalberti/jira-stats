@@ -23,7 +23,7 @@ public class Cicciolina implements Closeable {
 		Cicciolina cicciolina = new Cicciolina();
 		cicciolina.init();
 		try (Cicciolina ignored = cicciolina) {
-			cicciolina.fetchAll();
+			cicciolina.fetchIssues();
 		}
 	}
 
@@ -34,16 +34,16 @@ public class Cicciolina implements Closeable {
 		db.open();
 	}
 
-	private void fetchAll() throws IOException, InterruptedException {
+	private void fetchIssues() throws IOException, InterruptedException {
 		Instant start = now();
 		Instant until;
 		do {
-			until = fetchOnce(jira, db);
+			until = fetchNextIssuesBatch(jira, db);
 		} while (until.isBefore(now()));
 		System.out.println("=> All done in " + Duration.between(start, now()).toString());
 	}
 
-	private Instant fetchOnce(Jira jira, IssueDB db) throws InterruptedException {
+	private Instant fetchNextIssuesBatch(Jira jira, IssueDB db) throws InterruptedException {
 		Instant since = db.getNextBatchStart().orElse(Instant.parse("2016-01-01T00:00:00Z"));
 		Instant until = since.plus(30, DAYS);
 		System.out.println("Batch from " + since.toString() + " to " + until.toString() + " starting at " + now());
