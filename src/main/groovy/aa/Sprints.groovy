@@ -28,7 +28,7 @@ class Sprints {
         println "Saving:"
         println "${prettyPrint(toJson(sprints))}"
 
-        def sprintsCollection = new GMongo().getDB('jira-stats').getCollection('sprints')
+        def sprintsCollection = new GMongo().getDB('jira_stats').getCollection('sprints')
         println "Instead of"
         sprintsCollection.find().each {
             println it
