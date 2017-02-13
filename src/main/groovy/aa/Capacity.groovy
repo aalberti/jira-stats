@@ -18,6 +18,7 @@ class Capacity {
         db.getCollection('issues').find()
                 .collect { gson.fromJson(it.json as String, Issue) }
                 .findAll { it.project == 'PRIN' }
+                .findAll { ['Bug', 'Story'].contains(it.type) }
                 .findAll { issueClosedInASprint(it, sprints) }
                 .groupBy { it.closureDate.map { toMonday(it) }.orElse(null) }
                 .sort()
@@ -37,6 +38,8 @@ class Capacity {
     }
 
     private static boolean issueClosedInSprint(Issue issue, sprint) {
+        if (sprint.state != 'closed')
+            return false
         issue.closureDate.map {
             it.isBefore(parse(sprint.end)) && it.isAfter(parse(sprint.start))
         }.orElse(false)
