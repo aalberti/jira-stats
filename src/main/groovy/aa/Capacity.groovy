@@ -37,7 +37,7 @@ class Capacity {
                 .each { println "${it.key}=[${it.value.collect { it.key }}]" }
 
         println 'Stats'
-        println openBugsPerWeek.collect { date, openBugs ->
+        def stats = openBugsPerWeek.collect { date, openBugs ->
             def closedIssues = closedPerWeek[date]
             def closed = closedIssues ? closedIssues.size() : 0
             def open = openBugs.size()
@@ -47,6 +47,11 @@ class Capacity {
                     closed  : closed,
                     capacity: closed - open
             ]
+        }
+        stats.each { println it }
+        new File('capacity.csv').withPrintWriter { out ->
+            out.println 'date,open,close,capacity'
+            stats.each { out.println "${it.date},${it.open},${it.closed},${it.capacity}" }
         }
     }
 
