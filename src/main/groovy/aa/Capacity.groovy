@@ -38,10 +38,10 @@ class Capacity {
                 .each { println "${it.key}=[${it.value.collect { it.key }}]" }
 
         println "$project Stats"
-        def stats = openBugsPerWeek.collect { date, openBugs ->
-            def closedIssues = closedPerWeek[date]
+        def stats = closedPerWeek.collect { date, closedIssues ->
+            def openBugs = openBugsPerWeek[date]
             def closed = closedIssues ? closedIssues.size() : 0
-            def open = openBugs.size()
+            def open = openBugs ? openBugs.size() : 0
             [
                     date    : date,
                     open    : open,
