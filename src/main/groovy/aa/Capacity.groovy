@@ -21,7 +21,7 @@ class Capacity {
                 .findAll { it.project == project }
                 .findAll { ['Bug', 'Story'].contains(it.type) }
                 .findAll { issueClosedDuringASprint(it, sprints) }
-                .groupBy { it.closureDate.map { toMonday(it) }.orElse(null) }
+                .groupBy { it.closureDate.map { lastMonday(it) }.orElse(null) }
                 .sort()
         println 'Closed tickets per week'
         closedPerWeek
@@ -31,7 +31,7 @@ class Capacity {
                 .findAll { it.project == project }
                 .findAll { it.type == 'Bug' }
                 .findAll { bugAddedDuringASprint(it, sprints) }
-                .groupBy { additionToSprintInstant(it, sprints).map { toMonday(it) }.orElse(null) }
+                .groupBy { additionToSprintInstant(it, sprints).map { lastMonday(it) }.orElse(null) }
                 .sort()
         println 'Added bugs per week'
         openBugsPerWeek
@@ -96,17 +96,14 @@ class Capacity {
                 .findAll { Transition transition, sprint -> isAddedSprint(transition, sprint) && isDuringSprint(transition.at, sprint) }
                 .collect { Transition transition, sprint -> transition.at }
                 .sort()
-        if (res.isEmpty())
-            return Optional.empty()
-        else
-            return Optional.of(res[0])
+        return res.isEmpty() ? Optional.empty() : Optional.of(res[0])
     }
 
     private static boolean isAddedSprint(Transition transition, sprint) {
         transition.target.map { it.tokenize(':') }.map { it.contains(sprint.name) }.orElse(false)
     }
 
-    private static LocalDateTime toMonday(Instant instant) {
+    private static LocalDateTime lastMonday(Instant instant) {
         LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
                 .with(DayOfWeek.MONDAY)
                 .truncatedTo(ChronoUnit.DAYS)
