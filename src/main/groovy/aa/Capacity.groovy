@@ -110,7 +110,7 @@ class Capacity {
     }
 
     private static boolean isDuringSprint(Instant instant, sprint) {
-        if (!sprint.start || !sprint.end)
+        if (!sprint || !sprint.start || !sprint.end)
             return false
         instant.isBefore(parse(sprint.end)) && instant.isAfter(parse(sprint.start))
     }
