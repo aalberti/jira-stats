@@ -200,7 +200,7 @@ public class TheBigTest {
 		db.open();
 		try (IssueDB ignored = db) {
 			System.out.println(db.readAll()
-				.filter(i -> "PPC-163".equals(i.getKey()))
+				.filter(i -> "PRIN-3652".equals(i.getKey()))
 				.map(gson::toJson)
 				.blockingSingle());
 		}

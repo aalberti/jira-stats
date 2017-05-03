@@ -26,20 +26,20 @@ class Capacity {
         println 'Closed tickets per week'
         closedPerWeek
                 .each { println "${it.key}=[${it.value.collect { it.key }}]" }
-        def openBugsPerWeek = db.getCollection('issues').find()
+        def openPerWeek = db.getCollection('issues').find()
                 .collect { gson.fromJson(it.json as String, Issue) }
                 .findAll { it.project == project }
-                .findAll { it.type == 'Bug' }
-                .findAll { bugAddedDuringASprint(it, sprints) }
+                .findAll { ['Bug', 'Story'].contains(it.type) }
+                .findAll { issueAddedDuringASprint(it, sprints) }
                 .groupBy { additionToSprintInstant(it, sprints).map { lastMonday(it) }.orElse(null) }
                 .sort()
-        println 'Added bugs per week'
-        openBugsPerWeek
+        println 'Added tickets per week'
+        openPerWeek
                 .each { println "${it.key}=[${it.value.collect { it.key }}]" }
 
         println "$project Stats"
         def stats = closedPerWeek.collect { date, closedIssues ->
-            def openBugs = openBugsPerWeek[date]
+            def openBugs = openPerWeek[date]
             def closed = closedIssues ? closedIssues.size() : 0
             def open = openBugs ? openBugs.size() : 0
             [
@@ -68,7 +68,7 @@ class Capacity {
         issue.closureDate.map { isDuringSprint(it, sprint) }.orElse(false)
     }
 
-    private static boolean bugAddedDuringASprint(Issue issue, List sprints) {
+    private static boolean issueAddedDuringASprint(Issue issue, List sprints) {
         additionToSprintInstant(issue, sprints).present
     }
 
